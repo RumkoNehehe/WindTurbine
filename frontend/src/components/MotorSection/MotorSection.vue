@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BaseCard from '../Base/BaseCard.vue';
+import BaseCard from '../base/BaseCard.vue';
 import type { Motor } from '@/types/motor';
 import MotorList from './MotorList.vue';
 import LogPanel from './LogPanel.vue';

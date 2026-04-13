@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MotorCard from '../MotorSection/MotorCard.vue';
+import MotorCard from '../motorSection/MotorCard.vue';
 import type { Motor } from '@/types/motor';
 
 defineProps<{

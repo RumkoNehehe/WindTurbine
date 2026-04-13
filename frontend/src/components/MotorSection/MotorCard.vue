@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Motor } from '../../types/motor';
-import BaseCard from '../Base/BaseCard.vue';
+import BaseCard from '../base/BaseCard.vue';
 
 defineProps<{ motor: Motor }>()
 

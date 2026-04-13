@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import MotorSection from './components/MotorSection/MotorSection.vue';
+import MotorSection from './components/motorSection/MotorSection.vue';
 import type { Motor } from './types/motor'
 
 const motors = ref<Motor[]>([
