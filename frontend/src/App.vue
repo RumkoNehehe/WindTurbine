@@ -2,34 +2,39 @@
 import { ref } from 'vue';
 import MotorSection from './components/motorSection/MotorSection.vue';
 import type { Motor } from './types/motor'
+import ControlPanel from './components/controlPanel/ControlPanel.vue';
+import ChartPanel from './components/chartPanel/ChartPanel.vue';
 
 const motors = ref<Motor[]>([
-  { name: 'Motor1', pwm: 120, rpm: 240 },
-  { name: 'Motor2', pwm: 50, rpm: 110 }
+	{ name: 'Motor1', pwm: 120, rpm: 240 },
+	{ name: 'Motor2', pwm: 50, rpm: 110 }
 ])
+
+const isConnected = ref(true)
+const isRecording = ref(false)
+const lastUpdate = ref('Sobota 14:23')
 
 const logs = ref<string[]>(['nehehe', 'nehehe', 'hekjfshej'])
 
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-800 p-6">
-    <div class="max-w-7xl mx-auto bg-gray-700 rounded-2xl p-6">
+	<div class="min-h-screen bg-gray-800 p-6">
+		<div class="max-w-7xl mx-auto bg-gray-700 rounded-2xl p-6">
 
-      <h1 class="text-3xl font-bold text-center mb-6">
-        Ovládanie elektrárne
-      </h1>
+			<h1 class="text-3xl font-bold text-center mb-6">
+				Ovládanie elektrárne
+			</h1>
 
-      <div class="grid grid-cols-3 gap-6">
-        <MotorSection :motors="motors" :logs="logs"></MotorSection>
-        <!-- PLACEHOLDER -->
-        <div></div>
-        <!-- PLACEHOLDER -->
-        <div></div>
-      </div>
+			<div class="grid grid-cols-3 gap-6">
+				<MotorSection :motors="motors" :logs="logs"></MotorSection>
+				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :last-update="lastUpdate">
+				</ControlPanel>
+				<ChartPanel></ChartPanel>
+			</div>
 
-    </div>
-  </div>
+		</div>
+	</div>
 </template>
 
 <style scoped></style>
