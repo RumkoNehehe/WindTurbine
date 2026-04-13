@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Realtime test</title>
+    </head>
+    <body>
+        <h1>Realtime data</h1>
+
+        <div id="value">0</div>
+        <button onclick="sendCommand()">Start motor 1</button>
+        <button onclick="stopSystem()">Stop system</button>
+
+        <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+        <script>
+            const socket = io();
+
+            socket.on("connect", () => {
+                console.log("Connected to server");
+            });
+
+            socket.on("device_state", (data) => {
+                console.log(data);
+                document.getElementById("value").innerText = data.value;
+            });
+
+            function sendCommand() {
+                console.log("sending value")
+                socket.emit("set_motor_1", {
+                    pwm: 120,
+                    mode: "FORWARD"
+                });
+            }
+
+            function stopSystem(){
+                console.log("sending event to stop system")
+                socket.emit("stop_system");
+            }
+        </script>
+    </body>
+</html>
