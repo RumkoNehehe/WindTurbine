@@ -18,10 +18,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <BaseCard variant="dark" class="p-4 flex flex-col items-center gap-4">
+    <BaseCard variant="dark" class="p-4 flex flex-col items-center gap-4 h-full">
         <StatusBadge :variant="isConnected ? 'success' : 'danger'"
             :label="isConnected ? 'Connected' : 'Disconnected'" />
-        <p class="text-lg font-semibold">
+        <p class="font-semibold">
             Last update: {{ lastUpdate }}
         </p>
         <BaseButton variant="primary" @click="emit('start-recording')">

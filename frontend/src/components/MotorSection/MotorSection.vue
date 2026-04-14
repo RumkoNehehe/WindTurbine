@@ -11,8 +11,10 @@ defineProps<{
 </script>
 
 <template>
-    <BaseCard variant="dark" class="space-y-4">
-        <MotorList :motors="motors"></MotorList>
-        <LogPanel :logs="logs"></LogPanel>
+    <BaseCard variant="dark" class="h-full min-h-0">
+        <div class="flex h-full min-h-0 flex-col gap-4">
+            <MotorList :motors="motors"></MotorList>
+            <LogPanel :logs="logs"></LogPanel>
+        </div>
     </BaseCard>
 </template>

@@ -14,6 +14,7 @@ defineProps<{ motor: Motor }>()
             </h2>
             <p>pwm: {{ motor.pwm }}</p>
             <p>rpm: {{ motor.rpm }}</p>
+            <p>mode: {{ motor.mode }}</p>
         </div>
     </BaseCard>
 </template>
