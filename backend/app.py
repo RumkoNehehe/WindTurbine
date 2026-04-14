@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import threading
 from deviceAdapter import ArduinoSerialAdapter, MotorMode
@@ -27,7 +27,7 @@ def background_loop():
     while True:
         idk =  adapter.get_state()
         state["isConnected"] = True
-        state["lastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+        state["lastUpdate"] = datetime.now(timezone.utc).isoformat()
         state["motors"] = [
             {"name": "Motor 1"  , "pwm": idk.motor1.pwm, "rpm": int(round(idk.motor1.rpm_display)), "mode": str(idk.motor1.mode.name)},
             {"name": "Motor 2"  , "pwm": idk.motor2.pwm, "rpm": int(round(idk.motor2.rpm_display)), "mode": str(idk.motor2.mode.name)}
