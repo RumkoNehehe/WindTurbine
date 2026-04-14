@@ -6,18 +6,19 @@ import ControlPanel from './components/controlPanel/ControlPanel.vue';
 import ChartPanel from './components/chartPanel/ChartPanel.vue';
 import type { Motor } from './types/motor'
 import type { DataSource } from './types/dataSource';
-import type { LiveDashboardPayload } from './types/liveDashboardPayload';
-
+import type { LiveDashboardPayloadDto } from './types/liveDashboardPayloadDto';
+import type { LiveDashboardPayloadState } from './types/liveDashBoardState';
 const motors = ref<Motor[]>([
-	{ name: 'Motor1', pwm: 0, rpm: 0, mode:'Brake' },
-	{ name: 'Motor2', pwm: 0, rpm: 0, mode: 'Brake'}
+	{ name: 'Motor1', pwm: 0, rpm: 0, mode: 'Brake' },
+	{ name: 'Motor2', pwm: 0, rpm: 0, mode: 'Brake' }
 ])
 
 const socket = getSocket()
 
 const isConnected = ref(false)
 const isRecording = ref(false)
-const lastUpdate = ref('No data yet')
+const isChartDataFlowPaused = ref(false)
+const lastUpdate = ref('')
 
 const logs = ref<string[]>([])
 
@@ -30,26 +31,55 @@ const recordings = ref([
 	'Recording 03'
 ])
 
-function handleConnect(){
+const chartPoints = ref([
+	{ label: '', motor1: 0, motor2: 0 },
+])
+
+const dashboardHistory = ref<LiveDashboardPayloadState[]>([])
+
+function handleConnect() {
 	isConnected.value = true
 }
 
-function handleDisconnect(){
+function handleDisconnect() {
 	isConnected.value = false
 }
 
-function handleDashboardUpdate(payload: LiveDashboardPayload) {
-	isConnected.value = payload.isConnected
-	lastUpdate.value = payload.lastUpdate
-	motors.value = payload.motors
+function handleDashboardUpdate(payload: LiveDashboardPayloadDto) {
+	const mapped = mapDashboardState(payload)
+	dashboardHistory.value.push(mapped)
+	isConnected.value = mapped.isConnected
+	lastUpdate.value = mapped.lastUpdate.toLocaleString("en-GB", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})
+	motors.value = mapped.motors
 
-	const motor = payload.motors.at(0)
-	const log = `[${payload.lastUpdate}] ${motor?.name} → pwm: ${motor?.pwm}, rpm: ${motor?.rpm}`
-	logs.value.unshift(log)
-	// payload.motors.forEach(motor => {
-	// 	const log = `[${payload.lastUpdate}] ${motor.name} → pwm: ${motor.pwm}, rpm: ${motor.rpm}`
-	// 	logs.value.unshift(log)
-	// })
+	mapped.motors.forEach(motor => {
+		const log = `[${mapped.lastUpdate.toLocaleString("en-GB", {
+			hour: "2-digit",
+			minute: "2-digit",
+		})}] ${motor.name} → pwm: ${motor.pwm}, rpm: ${motor.rpm}`
+		logs.value.unshift(log)
+	})
+
+	chartPoints.value.push({
+		label: mapped.lastUpdate.toLocaleString("en-GB", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit"
+		}),
+		motor1: payload.motors[0]?.rpm ?? 0,
+		motor2: payload.motors[1]?.rpm ?? 0,
+	})
+}
+
+function mapDashboardState(payload: LiveDashboardPayloadDto): LiveDashboardPayloadState {
+	return {
+		isConnected: payload.isConnected,
+		lastUpdate: new Date(payload.lastUpdate),
+		motors: payload.motors
+	}
 }
 
 onMounted(() => {
@@ -72,14 +102,16 @@ onBeforeUnmount(() => {
 	<div class="h-screen overflow-hidden bg-gray-800 p-6">
 		<div class="max-w-400 mx-auto bg-gray-700 rounded-2xl flex flex-col h-full p-6">
 
-			 <h1 class="text-3xl font-bold text-center mb-6">
+			<h1 class="text-3xl font-bold text-center mb-6">
 				Ovládanie elektrárne
 			</h1>
 
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
 				<MotorSection class="h-full min-h-0" :motors="motors" :logs="logs"></MotorSection>
-				<ControlPanel class="h-full min-h-0" :isConnected="isConnected" :is-recording="isRecording" :last-update="lastUpdate"/>
-				<ChartPanel class="h-full min-h-0" :data-source="dataSource" :recordings="recordings" :selected-recording="selectedRecording"
+				<ControlPanel class="h-full min-h-0" :isConnected="isConnected" :is-recording="isRecording"
+					:last-update="lastUpdate" />
+				<ChartPanel class="h-full min-h-0" :data-source="dataSource" :recordings="recordings"
+					:selected-recording="selectedRecording" :points="chartPoints" :is-paused="isChartDataFlowPaused"
 					@update:data-source="dataSource = $event" @update:selected-recording="selectedRecording = $event">
 				</ChartPanel>
 			</div>

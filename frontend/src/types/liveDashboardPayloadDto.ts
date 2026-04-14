@@ -1,6 +1,6 @@
 import type { Motor } from "./motor"
 
-export type LiveDashboardPayload = {
+export type LiveDashboardPayloadDto = {
     isConnected: boolean,
     lastUpdate: string,
     motors: Motor[],

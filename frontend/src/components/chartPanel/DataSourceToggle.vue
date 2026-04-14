@@ -25,7 +25,7 @@ function setSource(value: DataSource) {
         <button class="flex-1 rounded-xl px-4 py-2 font-semibold transition" :class="modelValue === 'customData'
             ? 'bg-gray-700 text-white'
             : 'bg-transparent text-gray-700'" @click="setSource('customData')">
-            Recording
+            Recorded 
         </button>
     </div>
 </template>
