@@ -11,6 +11,7 @@ defineProps<{
 
 const emit = defineEmits<{
     (e: 'start-recording'): void
+    (e: 'download-file'): void
     (e: 'stop-recording'): void
 }>()
 
@@ -32,5 +33,9 @@ const emit = defineEmits<{
         </BaseButton>
 
         <StatusBadge :variant="isRecording ? 'success' : 'neutral'" :label="isRecording ? 'Recording On' : 'Recording Off'"/>
+
+        <BaseButton variant="neutral" @click="emit('download-file')">
+            Download reccording
+        </BaseButton>
     </BaseCard>
 </template>

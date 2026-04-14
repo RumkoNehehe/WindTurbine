@@ -14,7 +14,7 @@ const emit = defineEmits<{
         </BaseButton>
 
         <BaseButton variant="neutral" @click="emit('download-file')">
-            Download file
+            Switch data source
         </BaseButton>
     </BaseCard>
 </template>
