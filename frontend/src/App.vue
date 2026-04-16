@@ -8,6 +8,7 @@ import type { Motor } from './types/motor'
 import type { DataSource } from './types/dataSource';
 import type { LiveDashboardPayloadDto } from './types/liveDashboardPayloadDto';
 import type { LiveDashboardPayloadState } from './types/liveDashBoardState';
+import type { Mode } from './types/mode';
 const motors = ref<Motor[]>([
 	{ name: 'Motor1', pwm: 0, rpm: 0, mode: 'Brake' },
 	{ name: 'Motor2', pwm: 0, rpm: 0, mode: 'Brake' }
@@ -27,6 +28,7 @@ const logs = ref<string[]>([])
 
 const dataTypeToggle = ref<DataSource>('first')
 const controllsToggle = ref<DataSource>('first')
+const motorToggle = ref<DataSource>('first')
 const selectedRecording = ref('')
 
 const recordings = ref([
@@ -40,6 +42,17 @@ const chartPoints = ref([
 ])
 
 const dashboardHistory = ref<LiveDashboardPayloadState[]>([])
+
+const controlPwm = ref(60)
+const mode = ref<Mode>('forward')
+
+function applyMotorChanges() {
+  console.log({
+    target: motorToggle.value,
+    pwm: controlPwm.value,
+    mode: mode.value
+  })
+}
 
 function handleConnect() {
 	isConnected.value = true
@@ -131,7 +144,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="h-screen overflow-hidden bg-gray-800 p-6">
+	<div class="h-screen overflow-hidden bg-gray-800 p-4">
 		<div class="max-w-400 mx-auto bg-gray-700 rounded-2xl flex flex-col h-full p-6">
 
 			<h1 class="text-3xl font-bold text-center mb-6">
@@ -139,8 +152,15 @@ onBeforeUnmount(() => {
 			</h1>
 
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
-				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle" :logs="logs"
-					@update:data-source="controllsToggle = $event"></MotorSection>
+				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle" :mode="mode"
+					:logs="logs" :motor-source="motorToggle"
+					:pwm="controlPwm"
+					@update:motor-source="motorToggle = $event"
+					@update:mode="mode = $event"
+					@update:pwm="controlPwm = $event"
+					@apply="applyMotorChanges"
+					@update:data-source="controllsToggle = $event" >
+				</MotorSection>
 				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :username="username"
 					:last-update="lastUpdate" />
 				<ChartPanel class="h-full min-h-0" :data-source="dataTypeToggle" :recordings="recordings"

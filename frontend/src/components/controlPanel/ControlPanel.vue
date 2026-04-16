@@ -13,6 +13,7 @@ defineProps<{
 const emit = defineEmits<{
     (e: 'start-recording'): void
     (e: 'download-file'): void
+    (e: 'save-file'): void
     (e: 'stop-recording'): void
     (e: 'log-off'): void
 }>()
@@ -41,13 +42,17 @@ const emit = defineEmits<{
             <StatusBadge :variant="isRecording ? 'success' : 'neutral'"
                 :label="isRecording ? 'Recording On' : 'Recording Off'" />
 
+            <BaseButton variant="primary" @click="emit('save-file')">
+                Save to database
+            </BaseButton>
+
             <BaseButton variant="neutral" @click="emit('download-file')">
-                Download reccording
+                Download recording
             </BaseButton>
         </BaseCard>
 
         <BaseCard variant="light" class="flex flex-col justify-end mt-auto items-center">
-            <h3  class="text-md font-bold mb-2">
+            <h3 class="text-md font-bold mb-2">
                 Logged user: {{ username }}
             </h3>
             <BaseButton variant="danger" @click="emit('log-off')">

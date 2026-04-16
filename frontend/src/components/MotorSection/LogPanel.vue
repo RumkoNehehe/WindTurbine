@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import BaseCard from '../base/BaseCard.vue';
-
 
 defineProps<{
     logs: string[]
