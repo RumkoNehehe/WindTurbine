@@ -25,12 +25,16 @@ const emit = defineEmits<{
             <MotorList :motors="motors"></MotorList>
             <BaseCard variant="light" class="flex flex-col h-full min-h-0">
                 <div class="flex justify-between mb-2">
-                    <h2 class="text-xl font-bold">Logs</h2>
+                    <h2 v-if="dataSource==='first'" class="text-xl font-bold">Logs</h2>
+                    <h2 v-else class="text-xl font-bold">Control</h2>
 
                     <DataSourceToggle v-if="isAdmin" :labels="['Logs', 'Control']" :model-value="dataSource"
                         @update:model-value="emit('update:dataSource', $event)" />
                 </div>
-                <LogPanel :logs="logs"></LogPanel>
+                <LogPanel v-if="dataSource === 'first'" :logs="logs"></LogPanel>
+                <div v-else class="min-h-0 flex-1">
+                    <h2 class="text-xl font-bold">neheheheh</h2>
+                </div>
             </BaseCard>
         </div>
     </BaseCard>

@@ -21,6 +21,8 @@ const isChartDataFlowPaused = ref(false)
 const isAdmin = ref(true)
 const lastUpdate = ref('')
 
+const username = 'Admin'
+
 const logs = ref<string[]>([])
 
 const dataTypeToggle = ref<DataSource>('first')
@@ -127,7 +129,7 @@ onBeforeUnmount(() => {
 })
 
 </script>
-	
+
 <template>
 	<div class="h-screen overflow-hidden bg-gray-800 p-6">
 		<div class="max-w-400 mx-auto bg-gray-700 rounded-2xl flex flex-col h-full p-6">
@@ -139,7 +141,7 @@ onBeforeUnmount(() => {
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
 				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle" :logs="logs"
 					@update:data-source="controllsToggle = $event"></MotorSection>
-				<ControlPanel class="h-full min-h-0" :isConnected="isConnected" :is-recording="isRecording"
+				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :username="username"
 					:last-update="lastUpdate" />
 				<ChartPanel class="h-full min-h-0" :data-source="dataTypeToggle" :recordings="recordings"
 					:selected-recording="selectedRecording" :points="chartPoints" :is-paused="isChartDataFlowPaused"
