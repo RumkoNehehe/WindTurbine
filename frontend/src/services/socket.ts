@@ -4,9 +4,10 @@ let socket: Socket | null = null
 
 export function getSocket() {
     if (!socket) {
-        socket = io('http://192.168.0.111:5000', {
-            autoConnect: false
-        })
+        socket = io("http://192.168.0.165:5000", {
+            transports: ["websocket"],
+            autoConnect: false,
+        });
     }
 
     return socket

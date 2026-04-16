@@ -22,6 +22,7 @@ defineProps<{
 const emit = defineEmits<{
     (e: 'update:dataSource', value: DataSource): void
     (e: 'update:selectedRecording', value: string): void
+    (e: 'upload-file'): void
     (e: 'resume-dataFlow'): void
     (e: 'pause-dataFlow'): void
     (e: 'clear-chart'): void
@@ -42,35 +43,49 @@ const emit = defineEmits<{
                         Source
                     </label>
 
-                    <DataSourceToggle :model-value="dataSource"
+                    <DataSourceToggle :labels="['Live', 'Recorded']" :model-value="dataSource"
                         @update:model-value="emit('update:dataSource', $event)" />
                 </div>
 
-                <div v-if="dataSource==='liveData'" class="flex flex-col gap-2 h-full">
+                <div v-if="dataSource === 'first'" class="flex flex-col gap-2 h-full">
                     <label class="text-sm font-semibold text-gray-800">
                         Data flow
                     </label>
-                    <BaseButton v-if="isPaused" variant="danger" class="flex-1"
-                        @click="emit('resume-dataFlow')">
-                        Resume
-                    </BaseButton>
+                    <div class="pt-1">
+                        <BaseButton v-if="isPaused" variant="primary" class="flex-1" @click="emit('resume-dataFlow')">
+                            Resume
+                        </BaseButton>
 
-                    <BaseButton v-else-if="!isPaused" variant="danger" class="flex-1"
-                        @click="emit('pause-dataFlow')">
-                        Pause
-                    </BaseButton>
+                        <BaseButton v-else-if="!isPaused" variant="warning" class="flex-1 p-1"
+                            @click="emit('pause-dataFlow')">
+                            Pause
+                        </BaseButton>
+                    </div>
                 </div>
 
                 <div class="flex flex-col gap-2 h-full">
                     <label class="text-sm font-semibold text-gray-800">
                         Chart data
                     </label>
-                    <BaseButton variant="danger" @click="emit('clear-chart')" class="flex-1">
-                        Clear
-                    </BaseButton>
+                    <div class="pt-1">
+                        <BaseButton variant="danger" @click="emit('clear-chart')" class="flex-1">
+                            Clear
+                        </BaseButton>
+                    </div>
                 </div>
 
-                <RecordingSelect v-if="dataSource === 'customData'" :model-value="selectedRecording"
+                <div v-if="dataSource === 'second'" class="flex flex-col gap-2 h-full">
+                    <label class="text-sm font-semibold text-gray-800">
+                        Custom data
+                    </label>
+                    <div class="pt-1">
+                        <BaseButton variant="primary" @click="emit('upload-file')" class="flex-1">
+                            Upload file
+                        </BaseButton>
+                    </div>
+                </div>
+
+                <RecordingSelect v-if="dataSource === 'second'" :model-value="selectedRecording"
                     :recordings="recordings" @update:model-value="emit('update:selectedRecording', $event)" />
             </div>
         </BaseCard>

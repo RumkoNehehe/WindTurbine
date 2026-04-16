@@ -24,7 +24,7 @@ const emit = defineEmits<{
         <p class="font-semibold">
             Last update: {{ lastUpdate }}
         </p>
-        <BaseButton variant="primary" @click="emit('start-recording')">
+        <BaseButton variant="success" @click="emit('start-recording')">
             Start recording
         </BaseButton>
 

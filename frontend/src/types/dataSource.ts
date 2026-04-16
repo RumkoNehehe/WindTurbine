@@ -1,1 +1,1 @@
-export type DataSource = 'liveData' | 'customData'
+export type DataSource = 'first' | 'second'

@@ -20,19 +20,25 @@ state = {
     "logs": []
 }
 
-adapter = ArduinoSerialAdapter(port="COM5")
-
+# adapter = ArduinoSerialAdapter(port="COM5")
 # ---- Background task ----
 def background_loop():
+    dummyPwm = 60
+    dummyRpm = 10
     while True:
-        idk =  adapter.get_state()
+        # idk =  adapter.get_state()
+        if(dummyRpm != 400):
+            dummyRpm+=20
         state["isConnected"] = True
         state["lastUpdate"] = datetime.now(timezone.utc).isoformat()
         state["motors"] = [
-            {"name": "Motor 1"  , "pwm": idk.motor1.pwm, "rpm": int(round(idk.motor1.rpm_display)), "mode": str(idk.motor1.mode.name)},
-            {"name": "Motor 2"  , "pwm": idk.motor2.pwm, "rpm": int(round(idk.motor2.rpm_display)), "mode": str(idk.motor2.mode.name)}
+            # {"name": "Motor 1"  , "pwm": idk.motor1.pwm, "rpm": int(round(idk.motor1.rpm_display)), "mode": str(idk.motor1.mode.name)},
+            # {"name": "Motor 2"  , "pwm": idk.motor2.pwm, "rpm": int(round(idk.motor2.rpm_display)), "mode": str(idk.motor2.mode.name)}
+            {"name": "Motor 1"  , "pwm": dummyPwm, "rpm": int(round(dummyRpm)), "mode": str("Forward")},
+            {"name": "Motor 2"  , "pwm": dummyPwm, "rpm": int(round(dummyRpm-10)), "mode": str("Backward")}
             ]
 
+        print("sending Socket")
         socketio.emit("dashboard_update", state)
 
         time.sleep(1)
@@ -43,30 +49,30 @@ def index():
     return render_template("index.html")
 
 # ---- Socket events ----
-@socketio.on("connect")
-def handle_connect():
-    print("Client connected")
-    adapter.connect()
-    adapter.start_communication()
+# @socketio.on("connect")
+# def handle_connect():
+#     print("Client connected")
+#     adapter.connect()
+#     adapter.start_communication()
 
-@socketio.on("stop_system")
-def handle_stop():
-    print("Received request to stop system")
-    adapter.stop_system()
+# @socketio.on("stop_system")
+# def handle_stop():
+#     print("Received request to stop system")
+#     adapter.stop_system()
 
-@socketio.on("set_motor_1")
-def handle_set_motor1(data):
-    print("received request to set motor 1")
-    pwm = data.get("pwm", 0)
-    mode_str = data.get("mode", "BRAKE")
-    try:
-        mode = MotorMode[mode_str]
-    except KeyError:
-        print("Invalid mode, fallback to BRAKE")
-        mode = MotorMode.BRAKE
+# @socketio.on("set_motor_1")
+# def handle_set_motor1(data):
+#     print("received request to set motor 1")
+#     pwm = data.get("pwm", 0)
+#     mode_str = data.get("mode", "BRAKE")
+#     try:
+#         mode = MotorMode[mode_str]
+#     except KeyError:
+#         print("Invalid mode, fallback to BRAKE")
+#         mode = MotorMode.BRAKE
 
-    print(f"pwm: {pwm} mode: {mode}")
-    adapter.set_motor1(pwm, mode)
+#     print(f"pwm: {pwm} mode: {mode}")
+#     adapter.set_motor1(pwm, mode)
 
 # ---- Main ----
 if __name__ == "__main__":

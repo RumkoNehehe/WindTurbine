@@ -18,11 +18,13 @@ const socket = getSocket()
 const isConnected = ref(false)
 const isRecording = ref(false)
 const isChartDataFlowPaused = ref(false)
+const isAdmin = ref(true)
 const lastUpdate = ref('')
 
 const logs = ref<string[]>([])
 
-const dataSource = ref<DataSource>('liveData')
+const dataTypeToggle = ref<DataSource>('first')
+const controllsToggle = ref<DataSource>('first')
 const selectedRecording = ref('')
 
 const recordings = ref([
@@ -46,6 +48,7 @@ function handleDisconnect() {
 }
 
 function handleDashboardUpdate(payload: LiveDashboardPayloadDto) {
+	console.log("received socket")
 	const mapped = mapDashboardState(payload)
 	dashboardHistory.value.push(mapped)
 	isConnected.value = mapped.isConnected
@@ -63,6 +66,9 @@ function handleDashboardUpdate(payload: LiveDashboardPayloadDto) {
 		logs.value.unshift(log)
 	})
 
+	if (isChartDataFlowPaused.value) {
+		return
+	}
 	chartPoints.value.push({
 		label: mapped.lastUpdate.toLocaleString("en-GB", {
 			hour: "2-digit",
@@ -82,6 +88,30 @@ function mapDashboardState(payload: LiveDashboardPayloadDto): LiveDashboardPaylo
 	}
 }
 
+function clearChartData() {
+	chartPoints.value = []
+}
+
+function pauseChartDataFlow() {
+	if (!isConnected.value) {
+		return
+	}
+	if (isChartDataFlowPaused.value) {
+		return
+	}
+	isChartDataFlowPaused.value = true
+}
+
+function resumeChartDataFlow() {
+	if (!isConnected.value) {
+		return
+	}
+	if (!isChartDataFlowPaused.value) {
+		return
+	}
+	isChartDataFlowPaused.value = false
+}
+
 onMounted(() => {
 	socket.connect()
 
@@ -97,7 +127,7 @@ onBeforeUnmount(() => {
 })
 
 </script>
-
+	
 <template>
 	<div class="h-screen overflow-hidden bg-gray-800 p-6">
 		<div class="max-w-400 mx-auto bg-gray-700 rounded-2xl flex flex-col h-full p-6">
@@ -107,12 +137,15 @@ onBeforeUnmount(() => {
 			</h1>
 
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
-				<MotorSection class="h-full min-h-0" :motors="motors" :logs="logs"></MotorSection>
+				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle" :logs="logs"
+					@update:data-source="controllsToggle = $event"></MotorSection>
 				<ControlPanel class="h-full min-h-0" :isConnected="isConnected" :is-recording="isRecording"
 					:last-update="lastUpdate" />
-				<ChartPanel class="h-full min-h-0" :data-source="dataSource" :recordings="recordings"
+				<ChartPanel class="h-full min-h-0" :data-source="dataTypeToggle" :recordings="recordings"
 					:selected-recording="selectedRecording" :points="chartPoints" :is-paused="isChartDataFlowPaused"
-					@update:data-source="dataSource = $event" @update:selected-recording="selectedRecording = $event">
+					@clear-chart="clearChartData" @pause-data-flow="pauseChartDataFlow"
+					@resume-data-flow="resumeChartDataFlow" @update:data-source="dataTypeToggle = $event"
+					@update:selected-recording="selectedRecording = $event">
 				</ChartPanel>
 			</div>
 
