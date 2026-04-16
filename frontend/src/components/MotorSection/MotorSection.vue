@@ -36,9 +36,6 @@ const emit = defineEmits<{
                 <div class="flex justify-between mb-2">
                     <h2 v-if="dataSource === 'first'" class="text-xl font-bold">Logs</h2>
                     <h2 v-else class="text-xl font-bold">Control</h2>
-
-                    <DataSourceToggle v-if="isAdmin" :labels="['Logs', 'Control']" :model-value="dataSource"
-                        @update:model-value="emit('update:dataSource', $event)" />
                 </div>
 
                 <LogPanel v-if="dataSource === 'first'" :logs="logs"></LogPanel>

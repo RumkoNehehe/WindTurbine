@@ -37,12 +37,12 @@ const clampedPwm = computed(() => Math.max(0, Math.min(100, props.pwm)))
 </script>
 
 <template>
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-4">
         <DataSourceToggle :model-value="datasource" :labels="labels"
             @update:model-value="emit('update:dataSource', $event)" />
 
         <div class="flex flex-col">
-            <label class="text-sm font-semibold text-gray-800">
+            <label class="text-sm font-semibold text-gray-800 mb-1">
                 PWM
             </label>
 
@@ -54,7 +54,7 @@ const clampedPwm = computed(() => Math.max(0, Math.min(100, props.pwm)))
         </div>
 
         <div class="flex flex-col">
-            <label class="text-sm font-semibold text-gray-800">
+            <label class="text-sm font-semibold text-gray-800 mb-1">
                 Mode
             </label>
 

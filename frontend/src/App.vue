@@ -47,11 +47,11 @@ const controlPwm = ref(60)
 const mode = ref<Mode>('forward')
 
 function applyMotorChanges() {
-  console.log({
-    target: motorToggle.value,
-    pwm: controlPwm.value,
-    mode: mode.value
-  })
+	console.log({
+		target: motorToggle.value,
+		pwm: controlPwm.value,
+		mode: mode.value
+	})
 }
 
 function handleConnect() {
@@ -152,16 +152,14 @@ onBeforeUnmount(() => {
 			</h1>
 
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
-				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle" :mode="mode"
-					:logs="logs" :motor-source="motorToggle"
-					:pwm="controlPwm"
-					@update:motor-source="motorToggle = $event"
-					@update:mode="mode = $event"
-					@update:pwm="controlPwm = $event"
-					@apply="applyMotorChanges"
-					@update:data-source="controllsToggle = $event" >
+				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle"
+					:mode="mode" :logs="logs" :motor-source="motorToggle" :pwm="controlPwm"
+					@update:motor-source="motorToggle = $event" @update:mode="mode = $event"
+					@update:pwm="controlPwm = $event" @apply="applyMotorChanges"
+					@update:data-source="controllsToggle = $event">
 				</MotorSection>
-				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :username="username"
+				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :username="username" :is-admin
+					:data-source="controllsToggle" @update:data-source="controllsToggle = $event"
 					:last-update="lastUpdate" />
 				<ChartPanel class="h-full min-h-0" :data-source="dataTypeToggle" :recordings="recordings"
 					:selected-recording="selectedRecording" :points="chartPoints" :is-paused="isChartDataFlowPaused"
