@@ -2,12 +2,12 @@
 import BaseCard from '../base/BaseCard.vue';
 import BaseButton from '../base/BaseButton.vue';
 import StatusBadge from './StatusBadge.vue';
-import DataSourceToggle from '../chartPanel/DataSourceToggle.vue';
-import type { DataSource } from '@/types/dataSource';
+import DataSourceToggle from '../base/BaseToggle.vue';
+import type { ToggleData } from '@/types/dataSource';
 
 
 defineProps<{
-    dataSource: DataSource
+    dataSource: ToggleData
     isConnected: boolean
     isRecording: boolean
     lastUpdate: string
@@ -16,7 +16,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:dataSource', dataSource: DataSource): void
+    (e: 'update:toggle-data', dataSource: ToggleData): void
     (e: 'start-recording'): void
     (e: 'download-file'): void
     (e: 'save-file'): void
@@ -63,7 +63,7 @@ const emit = defineEmits<{
             </h3>
 
             <DataSourceToggle v-if="isAdmin" :labels="['Logs', 'Control']" :model-value="dataSource"
-                @update:model-value="emit('update:dataSource', $event)" />
+                @update:model-value="emit('update:toggle-data', $event)" />
             <BaseButton variant="danger" @click="emit('log-off')">
                 Log Off
             </BaseButton>

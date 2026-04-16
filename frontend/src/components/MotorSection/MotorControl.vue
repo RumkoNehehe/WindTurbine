@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import DataSourceToggle from '../chartPanel/DataSourceToggle.vue'
+import BaseToggle from '../base/BaseToggle.vue'
 import BaseButton from '../base/BaseButton.vue'
-import type { DataSource } from '@/types/dataSource'
+import type { ToggleData } from '@/types/dataSource'
 import type { Mode } from '@/types/mode'
 
 const props = defineProps<{
-    datasource: DataSource
+    toggleData: ToggleData
     labels: [string, string]
     pwm: number
     mode: Mode
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:dataSource', value: DataSource): void
+    (e: 'update:toggle-data', value: ToggleData): void
     (e: 'update:pwm', value: number): void
     (e: 'update:mode', value: Mode): void
     (e: 'apply'): void
@@ -38,8 +38,8 @@ const clampedPwm = computed(() => Math.max(0, Math.min(100, props.pwm)))
 
 <template>
     <div class="flex flex-col gap-4">
-        <DataSourceToggle :model-value="datasource" :labels="labels"
-            @update:model-value="emit('update:dataSource', $event)" />
+        <BaseToggle :model-value="toggleData" :labels="labels"
+            @update:model-value="emit('update:toggle-data', $event)" />
 
         <div class="flex flex-col">
             <label class="text-sm font-semibold text-gray-800 mb-1">

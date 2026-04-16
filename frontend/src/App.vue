@@ -5,7 +5,7 @@ import MotorSection from './components/motorSection/MotorSection.vue';
 import ControlPanel from './components/controlPanel/ControlPanel.vue';
 import ChartPanel from './components/chartPanel/ChartPanel.vue';
 import type { Motor } from './types/motor'
-import type { DataSource } from './types/dataSource';
+import type { ToggleData } from './types/dataSource';
 import type { LiveDashboardPayloadDto } from './types/liveDashboardPayloadDto';
 import type { LiveDashboardPayloadState } from './types/liveDashBoardState';
 import type { Mode } from './types/mode';
@@ -26,9 +26,9 @@ const username = 'Admin'
 
 const logs = ref<string[]>([])
 
-const dataTypeToggle = ref<DataSource>('first')
-const controllsToggle = ref<DataSource>('first')
-const motorToggle = ref<DataSource>('first')
+const dataTypeToggle = ref<ToggleData>('first')
+const controllsToggle = ref<ToggleData>('first')
+const motorToggle = ref<ToggleData>('first')
 const selectedRecording = ref('')
 
 const recordings = ref([
@@ -152,19 +152,18 @@ onBeforeUnmount(() => {
 			</h1>
 
 			<div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
-				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :data-source="controllsToggle"
-					:mode="mode" :logs="logs" :motor-source="motorToggle" :pwm="controlPwm"
-					@update:motor-source="motorToggle = $event" @update:mode="mode = $event"
-					@update:pwm="controlPwm = $event" @apply="applyMotorChanges"
-					@update:data-source="controllsToggle = $event">
+				<MotorSection class="h-full min-h-0" :motors="motors" :is-admin :controlsToggleData="controllsToggle"
+					:mode="mode" :logs="logs" :motorToggleData="motorToggle" :pwm="controlPwm"
+					@update:motor-toggle-data="motorToggle = $event" @update:mode="mode = $event"
+					@update:pwm="controlPwm = $event" @apply="applyMotorChanges">
 				</MotorSection>
 				<ControlPanel :isConnected="isConnected" :is-recording="isRecording" :username="username" :is-admin
-					:data-source="controllsToggle" @update:data-source="controllsToggle = $event"
+					:data-source="controllsToggle" @update:toggle-data="controllsToggle = $event"
 					:last-update="lastUpdate" />
-				<ChartPanel class="h-full min-h-0" :data-source="dataTypeToggle" :recordings="recordings"
+				<ChartPanel class="h-full min-h-0" :toggleData="dataTypeToggle" :recordings="recordings"
 					:selected-recording="selectedRecording" :points="chartPoints" :is-paused="isChartDataFlowPaused"
 					@clear-chart="clearChartData" @pause-data-flow="pauseChartDataFlow"
-					@resume-data-flow="resumeChartDataFlow" @update:data-source="dataTypeToggle = $event"
+					@resume-data-flow="resumeChartDataFlow" @update:toggle-data="dataTypeToggle = $event"
 					@update:selected-recording="selectedRecording = $event">
 				</ChartPanel>
 			</div>

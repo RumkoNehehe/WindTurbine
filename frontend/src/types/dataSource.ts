@@ -1,1 +1,1 @@
-export type DataSource = 'first' | 'second'
+export type ToggleData = 'first' | 'second'

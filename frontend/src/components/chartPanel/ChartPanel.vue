@@ -1,14 +1,14 @@
 <script setup lang="ts">
 
-import type { DataSource } from '@/types/dataSource';
+import type { ToggleData } from '@/types/dataSource';
 import BaseCard from '../base/BaseCard.vue';
-import DataSourceToggle from './DataSourceToggle.vue';
+import DataSourceToggle from '../base/BaseToggle.vue';
 import RecordingSelect from './RecordingSelect.vue';
 import LineChart from './LineChart.vue';
 import BaseButton from '../base/BaseButton.vue';
 
 defineProps<{
-    dataSource: DataSource
+    toggleData: ToggleData
     selectedRecording: string
     isPaused: boolean
     points: {
@@ -20,11 +20,11 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:dataSource', value: DataSource): void
-    (e: 'update:selectedRecording', value: string): void
+    (e: 'update:toggle-data', value: ToggleData): void
+    (e: 'update:selected-recording', value: string): void
     (e: 'upload-file'): void
-    (e: 'resume-dataFlow'): void
-    (e: 'pause-dataFlow'): void
+    (e: 'resume-data-flow'): void
+    (e: 'pause-data-flow'): void
     (e: 'clear-chart'): void
 }>()
 </script>
@@ -43,21 +43,21 @@ const emit = defineEmits<{
                         Source
                     </label>
 
-                    <DataSourceToggle :labels="['Live', 'Recorded']" :model-value="dataSource"
-                        @update:model-value="emit('update:dataSource', $event)" />
+                    <DataSourceToggle :labels="['Live', 'Recorded']" :model-value="toggleData"
+                        @update:model-value="emit('update:toggle-data', $event)" />
                 </div>
 
-                <div v-if="dataSource === 'first'" class="flex flex-col gap-2 h-full">
+                <div v-if="toggleData === 'first'" class="flex flex-col gap-2 h-full">
                     <label class="text-sm font-semibold text-gray-800">
                         Data flow
                     </label>
                     <div class="pt-1">
-                        <BaseButton v-if="isPaused" variant="primary" class="flex-1" @click="emit('resume-dataFlow')">
+                        <BaseButton v-if="isPaused" variant="primary" class="flex-1" @click="emit('resume-data-flow')">
                             Resume
                         </BaseButton>
 
                         <BaseButton v-else-if="!isPaused" variant="warning" class="flex-1 p-1"
-                            @click="emit('pause-dataFlow')">
+                            @click="emit('pause-data-flow')">
                             Pause
                         </BaseButton>
                     </div>
@@ -74,7 +74,7 @@ const emit = defineEmits<{
                     </div>
                 </div>
 
-                <div v-if="dataSource === 'second'" class="flex flex-col gap-2 h-full">
+                <div v-if="toggleData === 'second'" class="flex flex-col gap-2 h-full">
                     <label class="text-sm font-semibold text-gray-800">
                         Custom data
                     </label>
@@ -85,8 +85,8 @@ const emit = defineEmits<{
                     </div>
                 </div>
 
-                <RecordingSelect v-if="dataSource === 'second'" :model-value="selectedRecording"
-                    :recordings="recordings" @update:model-value="emit('update:selectedRecording', $event)" />
+                <RecordingSelect v-if="toggleData === 'second'" :selectedRecording="selectedRecording"
+                    :recordings="recordings" @update:selected-recording="emit('update:selected-recording', $event)" />
             </div>
         </BaseCard>
     </BaseCard>

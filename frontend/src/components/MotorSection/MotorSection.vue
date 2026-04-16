@@ -3,26 +3,25 @@ import BaseCard from '../base/BaseCard.vue';
 import type { Motor } from '@/types/motor';
 import MotorList from './MotorList.vue';
 import LogPanel from './LogPanel.vue';
-import DataSourceToggle from '../chartPanel/DataSourceToggle.vue';
-import type { DataSource } from '@/types/dataSource';
+import DataSourceToggle from '../base/BaseToggle.vue';
+import type { ToggleData } from '@/types/dataSource';
 import MotorControl from './MotorControl.vue';
 import type { Mode } from '@/types/mode';
 
 defineProps<{
     motors: Motor[]
     logs: string[]
-    dataSource: DataSource
-    motorSource: DataSource
+    controlsToggleData: ToggleData
+    motorToggleData: ToggleData
     isAdmin: boolean
     pwm: number
     mode: Mode
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:dataSource', value: DataSource): void
-    (e: 'update:motorSource', value: DataSource): void
+    (e: 'update:motor-toggle-data', value: ToggleData): void
     (e: 'update:pwm', value: number): void
-    (e: 'update:mode', value: 'forward' | 'backward' | 'brake'): void
+    (e: 'update:mode', value: Mode): void
     (e: 'apply'): void
 }>()
 
@@ -34,13 +33,13 @@ const emit = defineEmits<{
             <MotorList :motors="motors"></MotorList>
             <BaseCard variant="light" class="flex flex-col h-full min-h-0">
                 <div class="flex justify-between mb-2">
-                    <h2 v-if="dataSource === 'first'" class="text-xl font-bold">Logs</h2>
+                    <h2 v-if="controlsToggleData === 'first'" class="text-xl font-bold">Logs</h2>
                     <h2 v-else class="text-xl font-bold">Control</h2>
                 </div>
 
-                <LogPanel v-if="dataSource === 'first'" :logs="logs"></LogPanel>
-                <MotorControl v-else :datasource="motorSource" :labels="['Motor 1', 'Motor 2']" :pwm="pwm" :mode="mode"
-                    @update:data-source="emit('update:motorSource', $event)" @update:mode="emit('update:mode', $event)"
+                <LogPanel v-if="controlsToggleData === 'first'" :logs="logs"></LogPanel>
+                <MotorControl v-else :toggleData="motorToggleData" :labels="['Motor 1', 'Motor 2']" :pwm="pwm" :mode="mode"
+                    @update:toggle-data="emit('update:motor-toggle-data', $event)" @update:mode="emit('update:mode', $event)"
                     @update:pwm="emit('update:pwm', $event)" @apply="emit('apply')"></MotorControl>
             </BaseCard>
         </div>

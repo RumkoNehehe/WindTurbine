@@ -1,16 +1,16 @@
 <script setup lang="ts">
 defineProps<{
-    modelValue: string
+    selectedRecording: string
     recordings: string[]
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: string): void
+    (e: 'update:selected-recording', value: string): void
 }>()
 
 function handleChange(event: Event) {
     const target = event.target as HTMLSelectElement
-    emit('update:modelValue', target.value)
+    emit('update:selected-recording', target.value)
 }
 </script>
 
@@ -20,7 +20,7 @@ function handleChange(event: Event) {
             Recording
         </label>
 
-        <select class="rounded-xl bg-gray-300 px-4 py-3 font-semibold text-gray-800 outline-none" :value="modelValue"
+        <select class="rounded-xl bg-gray-300 px-4 py-3 font-semibold text-gray-800 outline-none" :value="selectedRecording"
             @change="handleChange">
             <option disabled value="">
                 Select a recording

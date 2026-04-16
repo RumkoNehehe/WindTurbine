@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { DataSource } from '@/types/dataSource'
+import type { ToggleData } from '@/types/dataSource'
 
 defineProps<{
-    modelValue: DataSource
+    modelValue: ToggleData
     labels: [string,string]
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:modelValue', value: DataSource): void
+    (e: 'update:model-value', value: ToggleData): void
 }>()
 
-function setSource(value: DataSource) {
-    emit('update:modelValue', value)
+function setSource(value: ToggleData) {
+    emit('update:model-value', value)
 }
 </script>
 
