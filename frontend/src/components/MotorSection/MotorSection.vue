@@ -23,6 +23,7 @@ const emit = defineEmits<{
     (e: 'update:pwm', value: number): void
     (e: 'update:mode', value: Mode): void
     (e: 'apply'): void
+    (e: 'stop-system'): void
 }>()
 
 </script>
@@ -40,7 +41,7 @@ const emit = defineEmits<{
                 <LogPanel v-if="controlsToggleData === 'first'" :logs="logs"></LogPanel>
                 <MotorControl v-else :toggleData="motorToggleData" :labels="['Motor 1', 'Motor 2']" :pwm="pwm" :mode="mode"
                     @update:toggle-data="emit('update:motor-toggle-data', $event)" @update:mode="emit('update:mode', $event)"
-                    @update:pwm="emit('update:pwm', $event)" @apply="emit('apply')"></MotorControl>
+                    @update:pwm="emit('update:pwm', $event)" @apply="emit('apply')" @stop-system="emit('stop-system')"></MotorControl>
             </BaseCard>
         </div>
     </BaseCard>

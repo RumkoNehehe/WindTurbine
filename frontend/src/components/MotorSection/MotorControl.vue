@@ -1,56 +1,81 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import BaseToggle from '../base/BaseToggle.vue'
-import BaseButton from '../base/BaseButton.vue'
-import type { ToggleData } from '@/types/dataSource'
-import type { Mode } from '@/types/mode'
+import { computed } from "vue";
+import BaseToggle from "../base/BaseToggle.vue";
+import BaseButton from "../base/BaseButton.vue";
+import type { ToggleData } from "@/types/dataSource";
+import type { Mode } from "@/types/mode";
 
 const props = defineProps<{
-    toggleData: ToggleData
-    labels: [string, string]
-    pwm: number
-    mode: Mode
-}>()
+    toggleData: ToggleData;
+    labels: [string, string];
+    pwm: number;
+    mode: Mode;
+}>();
 
 const emit = defineEmits<{
-    (e: 'update:toggle-data', value: ToggleData): void
-    (e: 'update:pwm', value: number): void
-    (e: 'update:mode', value: Mode): void
-    (e: 'apply'): void
-}>()
+    (e: "update:toggle-data", value: ToggleData): void;
+    (e: "update:pwm", value: number): void;
+    (e: "update:mode", value: Mode): void;
+    (e: "apply"): void;
+    (e: "stop-system"): void;
+}>();
 
 function handleSliderInput(event: Event) {
     const target = event.target as HTMLInputElement
-    emit('update:pwm', Number(target.value))
+    const percent = Number(target.value)
+
+    const pwm = Math.round((percent / 100) * 255)
+    emit("update:pwm", pwm)
 }
 
 function handleNumberInput(event: Event) {
     const target = event.target as HTMLInputElement
-    emit('update:pwm', Number(target.value))
+    const percent = Number(target.value)
+
+    const pwm = Math.round((percent / 100) * 255)
+    emit("update:pwm", pwm)
 }
 
 function setMode(value: Mode) {
-    emit('update:mode', value)
+    emit("update:mode", value);
 }
 
-const clampedPwm = computed(() => Math.max(0, Math.min(100, props.pwm)))
+
+const pwmPercent = computed(() =>
+  Math.round((props.pwm / 255) * 100)
+)
 </script>
 
 <template>
     <div class="flex flex-col gap-4">
-        <BaseToggle :model-value="toggleData" :labels="labels"
-            @update:model-value="emit('update:toggle-data', $event)" />
+        <BaseToggle
+            :model-value="toggleData"
+            :labels="labels"
+            @update:model-value="emit('update:toggle-data', $event)"
+        />
 
         <div class="flex flex-col">
             <label class="text-sm font-semibold text-gray-800 mb-1">
-                PWM
+                PWM %
             </label>
 
-            <input type="range" min="0" max="100" :value="clampedPwm" @input="handleSliderInput" />
+            <input
+                type="range"
+                min="0"
+                max="100"
+                :value="pwmPercent"
+                class="mb-1"
+                @input="handleSliderInput"
+            />
 
-            <input type="number" min="0" max="100"
-                class="w-28 rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none" :value="clampedPwm"
-                @input="handleNumberInput" />
+            <input
+                type="number"
+                min="0"
+                max="100"
+                class="w-28 rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none"
+                :value="pwmPercent"
+                @input="handleNumberInput"
+            />
         </div>
 
         <div class="flex flex-col">
@@ -59,30 +84,55 @@ const clampedPwm = computed(() => Math.max(0, Math.min(100, props.pwm)))
             </label>
 
             <div class="flex w-full rounded-2xl bg-gray-300 p-1">
-                <button class="flex-1 rounded-xl px-4 py-2 font-semibold transition" :class="mode === 'forward'
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-transparent text-gray-700'" @click="setMode('forward')">
+                <button
+                    class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
+                    :class="
+                        mode === 'FORWARD'
+                            ? 'bg-gray-700 text-white'
+                            : 'bg-transparent text-gray-700'
+                    "
+                    @click="setMode('FORWARD')"
+                >
                     Forward
                 </button>
 
-                <button class="flex-1 rounded-xl px-4 py-2 font-semibold transition" :class="mode === 'backward'
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-transparent text-gray-700'" @click="setMode('backward')">
+                <button
+                    class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
+                    :class="
+                        mode === 'REVERSE'
+                            ? 'bg-gray-700 text-white'
+                            : 'bg-transparent text-gray-700'
+                    "
+                    @click="setMode('REVERSE')"
+                >
                     Backward
                 </button>
 
-                <button class="flex-1 rounded-xl px-4 py-2 font-semibold transition" :class="mode === 'brake'
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-transparent text-gray-700'" @click="setMode('brake')">
+                <button
+                    class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
+                    :class="
+                        mode === 'BRAKE'
+                            ? 'bg-gray-700 text-white'
+                            : 'bg-transparent text-gray-700'
+                    "
+                    @click="setMode('BRAKE')"
+                >
                     Brake
                 </button>
             </div>
         </div>
 
-        <div>
-            <BaseButton variant="primary" @click="emit('apply')">
-                Apply changes
-            </BaseButton>
+        <div class="flex flex-row justify-between">
+            <div>
+                <BaseButton variant="primary" @click="emit('apply')">
+                    Send command
+                </BaseButton>
+            </div>
+            <div>
+                <BaseButton variant="danger" @click="emit('stop-system')">
+                    Stop system
+                </BaseButton>
+            </div>
         </div>
     </div>
 </template>

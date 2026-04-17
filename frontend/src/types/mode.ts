@@ -1,1 +1,1 @@
-export type Mode = 'forward' | 'backward' | 'brake'
+export type Mode = 'FORWARD' | 'REVERSE' | 'BRAKE'
