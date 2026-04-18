@@ -16,7 +16,6 @@ background_thread = None
 thread_lock = threading.Lock()
 running = False
 
-# ---- Dummy state (zatiaľ bez adaptera) ----
 state = {
     "isConnected": True,
     "lastUpdate": datetime.now().isoformat(),
