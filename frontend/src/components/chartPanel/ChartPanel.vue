@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import type { ToggleData } from "@/types/dataSource";
+import type { ChartDataSource } from "@/types/chartDataSource";
 import BaseCard from "../base/BaseCard.vue";
 import DataSourceToggle from "../base/BaseToggle.vue";
 import RecordingSelect from "./RecordingSelect.vue";
 import LineChart from "./LineChart.vue";
 import BaseButton from "../base/BaseButton.vue";
-import { ref } from "vue";
 
 defineProps<{
-    toggleData: ToggleData;
+    chartDataSource: ChartDataSource;
     selectedRecording: string;
     isPaused: boolean;
     points: {
@@ -20,7 +19,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "update:toggle-data", value: ToggleData): void;
+    (e: "update:chart-data-source", value: ChartDataSource): void;
     (e: "update:selected-recording", value: string): void;
     (e: "upload-file", value: Event): void;
     (e: "resume-data-flow"): void;
@@ -28,6 +27,10 @@ const emit = defineEmits<{
     (e: "clear-chart"): void;
 }>();
 
+const chartSourceOptions = [
+    { label: "Live", value: "live" },
+    { label: "Recorded", value: "recorded" },
+] as const
 </script>
 
 <template>
@@ -45,14 +48,14 @@ const emit = defineEmits<{
                     </label>
 
                     <DataSourceToggle
-                        :labels="['Live', 'Recorded']"
-                        :model-value="toggleData"
-                        @update:model-value="emit('update:toggle-data', $event)"
+                        :model-value="chartDataSource"
+                        :options="chartSourceOptions"
+                        @update:model-value="emit('update:chart-data-source', $event as ChartDataSource)"
                     />
                 </div>
 
                 <div
-                    v-if="toggleData === 'first'"
+                    v-if="chartDataSource === 'live'"
                     class="flex flex-col gap-2 h-full"
                 >
                     <label class="text-sm font-semibold text-gray-800">
@@ -95,7 +98,7 @@ const emit = defineEmits<{
                 </div>
 
                 <div
-                    v-if="toggleData === 'second'"
+                    v-if="chartDataSource === 'recorded'"
                     class="flex flex-col gap-2 h-full"
                 >
                     <label class="text-sm font-semibold text-gray-800">
@@ -122,7 +125,7 @@ const emit = defineEmits<{
                 </div>
 
                 <RecordingSelect
-                    v-if="toggleData === 'second'"
+                    v-if="chartDataSource === 'recorded'"
                     :selectedRecording="selectedRecording"
                     :recordings="recordings"
                     @update:selected-recording="

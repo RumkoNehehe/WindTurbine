@@ -1,4 +1,4 @@
-import type { Motor } from "./motor"
+import type { Motor } from "../motor"
 
 export type LiveDashboardPayloadState = {
     lastUpdate: Date,

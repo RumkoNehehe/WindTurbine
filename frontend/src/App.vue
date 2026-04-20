@@ -1,64 +1,86 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import { getSocket } from "./services/socket";
+import { ref, watch, computed } from "vue";
 import MotorSection from "./components/motorSection/MotorSection.vue";
 import ControlPanel from "./components/controlPanel/ControlPanel.vue";
 import ChartPanel from "./components/chartPanel/ChartPanel.vue";
-import type { Motor } from "./types/motor";
-import type { ToggleData } from "./types/dataSource";
-import type { LiveDashboardPayloadDto } from "./types/liveDashboardPayloadDto";
-import type { LiveDashboardPayloadState } from "./types/liveDashBoardState";
 import type { Mode } from "./types/mode";
-const motors = ref<Motor[]>([
-    { name: "Motor1", pwm: 0, rpm: 0, mode: "Brake" },
-    { name: "Motor2", pwm: 0, rpm: 0, mode: "Brake" },
-]);
+import { useSocketDashboard } from "./composables/useSocketDashboard";
+import { useRecording } from "./composables/useRecording";
+import { useChartData } from "./composables/userChartData";
+import type { ChartDataSource } from "./types/chartDataSource";
+import type { LeftPanelView } from "./types/leftPanelView";
+import type { MotorTarget } from "./types/motorTarget";
 
-const socket = getSocket();
+const { socket, motors, isConnected, lastUpdate, logs, dashboardHistory } =
+    useSocketDashboard();
 
-const isConnected = ref(false);
-const isRecording = ref(false);
-const isChartDataFlowPaused = ref(true);
+const {
+    isRecording,
+    customChartPoints,
+    startRecording,
+    stopRecording,
+    appendToRecording,
+    downloadRecording,
+    handleFileUpload,
+    clearCustomChartData,
+} = useRecording();
+
+const {
+    isChartDataFlowPaused,
+    chartPoints,
+    clearChartData,
+    pauseChartDataFlow,
+    resumeChartDataFlow,
+} = useChartData(dashboardHistory);
+
 const isAdmin = ref(true);
 const isRegulation = ref(false);
-const lastUpdate = ref("");
 
 const username = "Admin";
 
-const logs = ref<string[]>([]);
+const chartDataToggle = ref<ChartDataSource>("live");
+const controllsToggle = ref<LeftPanelView>("logs");
+const motorToggle = ref<MotorTarget>("motor1");
 
-const dataTypeToggle = ref<ToggleData>("first");
-const controllsToggle = ref<ToggleData>("first");
-const motorToggle = ref<ToggleData>("first");
 const selectedRecording = ref("");
 
 const recordings = ref(["Recording 01", "Recording 02", "Recording 03"]);
 
-const chartPoints = ref([{ label: "", motor1: 0, motor2: 0 }]);
-const customChartPoints = ref([{ label: "", motor1: 0, motor2: 0 }]);
-
-const dashboardHistory = ref<LiveDashboardPayloadState[]>([]);
-const record = ref<LiveDashboardPayloadState[]>([]);
-
-const controlPwm = ref(60);
+const controlPwm = ref(128);
 const mode = ref<Mode>("FORWARD");
 
-const toggleData = ref<ToggleData>("first");
-const targetRpm = ref(60);
-const kp = ref(1);
-const ki = ref(1);
-const kd = ref(1);
+const toggleData = ref<MotorTarget>("motor1");
+const targetRpm = ref(500);
+const kp = ref(0.6);
+const ki = ref(0.5);
+const kd = ref(0.12);
 const mode2 = ref<Mode>("FORWARD");
 const isRegulating = ref(false);
 
+const manualControl = computed(() => ({
+    motorTarget: motorToggle.value,
+    pwm: controlPwm.value,
+    mode: mode.value,
+}))
+
+const regulationControl = computed(() => ({
+    motorTarget: toggleData.value,
+    targetRpm: targetRpm.value,
+    kp: kp.value,
+    ki: ki.value,
+    kd: kd.value,
+    mode: mode2.value,
+    isRegulating: isRegulating.value,
+}))
+
 function applyMotorChanges() {
-    if (motorToggle.value === "first") {
+    if (motorToggle.value === "motor1") {
         socket.emit("set_motor_1", {
             pwm: controlPwm.value,
             mode: mode.value,
         });
     }
-    if (motorToggle.value === "second") {
+    if (motorToggle.value === "motor2") {
         socket.emit("set_motor_2", {
             pwm: controlPwm.value,
             mode: mode.value,
@@ -71,151 +93,9 @@ function stopSystem() {
     socket.emit("stop_system");
 }
 
-function handleConnect() {
-    isConnected.value = true;
-}
-
-function handleDisconnect() {
-    isConnected.value = false;
-}
-
-function startRecording() {
-    record.value = [];
-    isRecording.value = true;
-}
-
-function stopRecording() {
-    isRecording.value = false;
-}
-
-function downloadRecording() {
-    if (isRecording.value) {
-        return;
-    }
-    const dataStr = JSON.stringify(record.value, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const fileName = `recording-${new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")}.json`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.click();
-
-    URL.revokeObjectURL(url);
-}
-
-function handleFileUpload(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-        try {
-            const text = reader.result as string;
-            const parsed = JSON.parse(text);
-
-            if (!Array.isArray(parsed)) {
-                throw new Error("Invalid format");
-            }
-
-            customChartPoints.value = parsed.map((item: any) => ({
-                label: item.lastUpdate,
-                motor1: item.motors?.[0]?.rpm ?? 0,
-                motor2: item.motors?.[1]?.rpm ?? 0,
-            }));
-        } catch (err) {
-            console.error(err);
-            alert("Invalid JSON file");
-        }
-    };
-
-    reader.readAsText(file);
-    target.value = "";
-}
-
-function handleDashboardUpdate(payload: LiveDashboardPayloadDto) {
-    console.log("received socket");
-    const mapped = mapDashboardState(payload);
-    dashboardHistory.value.push(mapped);
-    isConnected.value = payload.isConnected;
-    lastUpdate.value = mapped.lastUpdate.toLocaleString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-    motors.value = mapped.motors;
-
-    if (isRecording.value) {
-        record.value.push(mapped);
-    }
-
-    mapped.motors.forEach((motor) => {
-        const log = `[${mapped.lastUpdate.toLocaleString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-        })}] ${motor.name} → pwm: ${motor.pwm}, rpm: ${motor.rpm}, mode: ${motor.mode}`;
-        logs.value.unshift(log);
-    });
-
-    if (isChartDataFlowPaused.value) {
-        return;
-    }
-    chartPoints.value.push({
-        label: mapped.lastUpdate.toLocaleString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-        }),
-        motor1: payload.motors[0]?.rpm ?? 0,
-        motor2: payload.motors[1]?.rpm ?? 0,
-    });
-}
-
-function mapDashboardState(
-    payload: LiveDashboardPayloadDto,
-): LiveDashboardPayloadState {
-    return {
-        lastUpdate: new Date(payload.lastUpdate),
-        motors: payload.motors,
-    };
-}
-
-function clearChartData() {
-    chartPoints.value = [];
-}
-
-function clearCustomChartData() {
-    customChartPoints.value = [];
-}
-
-function pauseChartDataFlow() {
-    if (!isConnected.value) {
-        return;
-    }
-    isChartDataFlowPaused.value = true;
-}
-
-function resumeChartDataFlow() {
-    if (!isConnected.value) {
-        return;
-    }
-    isChartDataFlowPaused.value = false;
-}
-
 function startRegulation() {
-    let myMotor = "";
-    if (toggleData.value === "first") {
-        myMotor = "motor1";
-    } else {
-        myMotor = "motor2";
-    }
     socket.emit("start_regulation", {
-        target: myMotor, // or "motor2" or "both"
+        target: toggleData.value,
         target_rpm: targetRpm.value,
         kp: kp.value,
         ki: ki.value,
@@ -234,21 +114,15 @@ function handleToggleRegulation() {
     isRegulation.value = !isRegulation.value;
 }
 
-onMounted(() => {
-    socket.connect();
+watch(
+    () => dashboardHistory.value.length,
+    () => {
+        const latest = dashboardHistory.value.at(-1);
+        if (!latest) return;
 
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("dashboard_update", handleDashboardUpdate);
-});
-
-onBeforeUnmount(() => {
-    socket.off("connect", handleConnect);
-    socket.off("disconnect", handleDisconnect);
-    socket.off("dashboard_update", handleDashboardUpdate);
-
-    socket.disconnect();
-});
+        appendToRecording(latest);
+    },
+);
 </script>
 
 <template>
@@ -264,31 +138,23 @@ onBeforeUnmount(() => {
                 <MotorSection
                     class="h-full min-h-0"
                     :motors="motors"
-                    :is-admin
-                    :controlsToggleData="controllsToggle"
-                    :mode="mode"
                     :logs="logs"
-                    :motorToggleData="motorToggle"
-                    :is-regulation="isRegulation"
-                    :pwm="controlPwm"
-                    :kd="kd"
-                    :kp="kp"
-                    :ki="ki"
-                    :is-regulating="isRegulating"
-                    :mode2="mode2"
-                    :toggle-data="toggleData"
-                    :target-rpm="targetRpm"
+					:is-admin="isAdmin"
+					:is-regulation="isRegulation"
+					:left-panel-view="controllsToggle"
+					:regulation-control="regulationControl"
+					:manual-control="manualControl"
                     @update:kd="kd = $event"
                     @update:ki="ki = $event"
                     @update:kp="kp = $event"
                     @update:target-rpm="targetRpm = $event"
-                    @update:toggle-data="toggleData = $event"
-                    @start-regulation="startRegulation"
-                    @stop-regulation="stopRegulation"
+					@update:motor-target="toggleData = $event"
                     @update:motor-toggle-data="motorToggle = $event"
                     @update:mode="mode = $event"
                     @update:mode2="mode2 = $event"
                     @update:pwm="controlPwm = $event"
+                    @start-regulation="startRegulation"
+                    @stop-regulation="stopRegulation"
                     @apply="applyMotorChanges"
                     @stop-system="stopSystem"
                     @toggle-regulation="handleToggleRegulation"
@@ -299,18 +165,18 @@ onBeforeUnmount(() => {
                     :is-recording="isRecording"
                     :username="username"
                     :is-admin
-                    :data-source="controllsToggle"
+                    :leftPanelToggle="controllsToggle"
                     :last-update="lastUpdate"
-                    @update:toggle-data="controllsToggle = $event"
+                    @update:left-panel-toggle="controllsToggle = $event"
                     @start-recording="startRecording"
                     @stop-recording="stopRecording"
                     @download-file="downloadRecording"
                 />
 
                 <ChartPanel
-                    v-if="dataTypeToggle === 'first'"
+                    v-if="chartDataToggle === 'live'"
                     class="h-full min-h-0"
-                    :toggleData="dataTypeToggle"
+                    :chartDataSource="chartDataToggle"
                     :recordings="recordings"
                     :selected-recording="selectedRecording"
                     :points="chartPoints"
@@ -319,15 +185,15 @@ onBeforeUnmount(() => {
                     @pause-data-flow="pauseChartDataFlow"
                     @resume-data-flow="resumeChartDataFlow"
                     @upload-file="handleFileUpload"
-                    @update:toggle-data="dataTypeToggle = $event"
+                    @update:chart-data-source="chartDataToggle = $event"
                     @update:selected-recording="selectedRecording = $event"
                 >
                 </ChartPanel>
 
                 <ChartPanel
-                    v-if="dataTypeToggle === 'second'"
+                    v-if="chartDataToggle === 'recorded'"
                     class="h-full min-h-0"
-                    :toggleData="dataTypeToggle"
+                    :chartDataSource="chartDataToggle"
                     :recordings="recordings"
                     :selected-recording="selectedRecording"
                     :points="customChartPoints"
@@ -336,7 +202,7 @@ onBeforeUnmount(() => {
                     @pause-data-flow="pauseChartDataFlow"
                     @resume-data-flow="resumeChartDataFlow"
                     @upload-file="handleFileUpload"
-                    @update:toggle-data="dataTypeToggle = $event"
+                    @update:toggle-data="chartDataToggle = $event"
                     @update:selected-recording="selectedRecording = $event"
                 >
                 </ChartPanel>

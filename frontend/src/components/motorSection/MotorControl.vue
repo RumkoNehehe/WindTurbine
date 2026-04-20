@@ -2,18 +2,16 @@
 import { computed } from "vue";
 import BaseToggle from "../base/BaseToggle.vue";
 import BaseButton from "../base/BaseButton.vue";
-import type { ToggleData } from "@/types/dataSource";
 import type { Mode } from "@/types/mode";
+import type { MotorTarget } from "@/types/motorTarget";
+import type {ManualMotorControlState  } from "@/types/states/ManualMotorControlState";
 
 const props = defineProps<{
-    toggleData: ToggleData;
-    labels: [string, string];
-    pwm: number;
-    mode: Mode;
+    manualControl: ManualMotorControlState
 }>();
 
 const emit = defineEmits<{
-    (e: "update:toggle-data", value: ToggleData): void;
+    (e: "update:motor-target", value: MotorTarget): void;
     (e: "update:pwm", value: number): void;
     (e: "update:mode", value: Mode): void;
     (e: "apply"): void;
@@ -41,16 +39,21 @@ function setMode(value: Mode) {
 }
 
 const pwmPercent = computed(() =>
-  Math.round((props.pwm / 255) * 100)
-)
+    Math.max(0, Math.min(100, Math.round((props.manualControl.pwm / 255) * 100)))
+);
+
+const motorTargetOptions = [
+    { label: "Motor 1", value: "motor1" },
+    { label: "Motor 2", value: "motor2" },
+] as const
 </script>
 
 <template>
     <div class="flex flex-col gap-4">
         <BaseToggle
-            :model-value="toggleData"
-            :labels="labels"
-            @update:model-value="emit('update:toggle-data', $event)"
+            :model-value="manualControl.motorTarget"
+            :options="motorTargetOptions"
+            @update:model-value="emit('update:motor-target', $event as MotorTarget)"
         />
 
         <div class="flex flex-col">
@@ -86,7 +89,7 @@ const pwmPercent = computed(() =>
                 <button
                     class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
                     :class="
-                        mode === 'FORWARD'
+                        manualControl.mode === 'FORWARD'
                             ? 'bg-gray-700 text-white'
                             : 'bg-transparent text-gray-700'
                     "
@@ -98,7 +101,7 @@ const pwmPercent = computed(() =>
                 <button
                     class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
                     :class="
-                        mode === 'REVERSE'
+                        manualControl.mode === 'REVERSE'
                             ? 'bg-gray-700 text-white'
                             : 'bg-transparent text-gray-700'
                     "
@@ -110,7 +113,7 @@ const pwmPercent = computed(() =>
                 <button
                     class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
                     :class="
-                        mode === 'BRAKE'
+                        manualControl.mode === 'BRAKE'
                             ? 'bg-gray-700 text-white'
                             : 'bg-transparent text-gray-700'
                     "

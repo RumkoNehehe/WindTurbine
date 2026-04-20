@@ -1,22 +1,17 @@
 <script setup lang="ts">
 import BaseToggle from "../base/BaseToggle.vue";
 import BaseButton from "../base/BaseButton.vue";
-import type { ToggleData } from "@/types/dataSource";
 import type { Mode } from "@/types/mode";
+import type { MotorTarget } from "@/types/motorTarget";
+import type {MotorRegulationState  } from "@/types/states/regulationState";
 
 const props = defineProps<{
-    toggleData: ToggleData;
-    labels: [string, string];
-    targetRpm: number;
-    kp: number;
-    ki: number;
-    kd: number;
-    mode2: Mode;
-    isRegulating?: boolean;
+    regulationControl: MotorRegulationState
+
 }>();
 
 const emit = defineEmits<{
-    (e: "update:toggle-data", value: ToggleData): void;
+    (e: "update:motor-target", value: MotorTarget): void;
     (e: "update:target-rpm", value: number): void;
     (e: "update:kp", value: number): void;
     (e: "update:ki", value: number): void;
@@ -52,14 +47,19 @@ function handleNumberInput(
 function setMode(value: Mode) {
     emit("update:mode2", value);
 }
+
+const motorTargetOptions = [
+    { label: "Motor 1", value: "motor1" },
+    { label: "Motor 2", value: "motor2" },
+] as const
 </script>
 
 <template>
     <div class="flex flex-col gap-2">
         <BaseToggle
-            :model-value="toggleData"
-            :labels="labels"
-            @update:model-value="emit('update:toggle-data', $event)"
+            :model-value="regulationControl.motorTarget"
+            :options="motorTargetOptions"
+            @update:model-value="emit('update:motor-target', $event as MotorTarget)"
         />
 
         <div class="flex justify-between">
@@ -72,16 +72,16 @@ function setMode(value: Mode) {
                     type="number"
                     min="0"
                     class="w-32 rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none"
-                    :value="targetRpm"
+                    :value="regulationControl.targetRpm"
                     @input="handleNumberInput($event, 'target-rpm')"
                 />
             </div>
         <p
-            v-if="isRegulating !== undefined"
+            v-if="regulationControl.isRegulating !== undefined"
             class="text-sm font-semibold text-gray-800"
         >
             Regulation:
-            {{ isRegulating ? "Active" : "Stopped" }}
+            {{ regulationControl.isRegulating ? "Active" : "Stopped" }}
         </p>
         </div>
 
@@ -95,7 +95,7 @@ function setMode(value: Mode) {
                     type="number"
                     step="0.01"
                     class="rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none"
-                    :value="kp"
+                    :value="regulationControl.kp"
                     @input="handleNumberInput($event, 'kp')"
                 />
             </div>
@@ -109,7 +109,7 @@ function setMode(value: Mode) {
                     type="number"
                     step="0.01"
                     class="rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none"
-                    :value="ki"
+                    :value="regulationControl.ki"
                     @input="handleNumberInput($event, 'ki')"
                 />
             </div>
@@ -123,7 +123,7 @@ function setMode(value: Mode) {
                     type="number"
                     step="0.01"
                     class="rounded-xl bg-white px-3 py-2 text-sm shadow-sm outline-none"
-                    :value="kd"
+                    :value="regulationControl.kd"
                     @input="handleNumberInput($event, 'kd')"
                 />
             </div>
@@ -138,7 +138,7 @@ function setMode(value: Mode) {
                 <button
                     class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
                     :class="
-                        mode2 === 'FORWARD'
+                        regulationControl.mode === 'FORWARD'
                             ? 'bg-gray-700 text-white'
                             : 'bg-transparent text-gray-700'
                     "
@@ -150,7 +150,7 @@ function setMode(value: Mode) {
                 <button
                     class="flex-1 rounded-xl px-4 py-2 font-semibold transition"
                     :class="
-                        mode2 === 'REVERSE'
+                        regulationControl.mode === 'REVERSE'
                             ? 'bg-gray-700 text-white'
                             : 'bg-transparent text-gray-700'
                     "

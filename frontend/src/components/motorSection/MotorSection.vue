@@ -3,37 +3,32 @@ import BaseCard from "../base/BaseCard.vue";
 import type { Motor } from "@/types/motor";
 import MotorList from "./MotorList.vue";
 import LogPanel from "./LogPanel.vue";
-import type { ToggleData } from "@/types/dataSource";
 import MotorControl from "./MotorControl.vue";
 import type { Mode } from "@/types/mode";
 import MotorRegulation from "./MotorRegulation.vue";
 import BaseButton from "../base/BaseButton.vue";
+import type { LeftPanelView } from "@/types/leftPanelView";
+import type { MotorTarget } from "@/types/motorTarget";
+import type { ManualMotorControlState } from "@/types/states/ManualMotorControlState";
+import type { MotorRegulationState } from "@/types/states/regulationState";
 
 defineProps<{
     motors: Motor[];
     logs: string[];
-    controlsToggleData: ToggleData;
-    motorToggleData: ToggleData;
     isAdmin: boolean;
     isRegulation: boolean;
-    pwm: number;
-    mode: Mode;
-    toggleData: ToggleData;
-    targetRpm: number;
-    kp: number;
-    ki: number;
-    kd: number;
-    mode2: Mode;
-    isRegulating?: boolean;
+    leftPanelView: LeftPanelView;
+    manualControl: ManualMotorControlState;
+    regulationControl: MotorRegulationState;
 }>();
 
 const emit = defineEmits<{
-    (e: "update:motor-toggle-data", value: ToggleData): void;
+    (e: "update:motor-toggle-data", value: MotorTarget): void;
     (e: "update:pwm", value: number): void;
     (e: "update:mode", value: Mode): void;
     (e: "apply"): void;
     (e: "stop-system"): void;
-    (e: "update:toggle-data", value: ToggleData): void;
+    (e: "update:motor-target", value: MotorTarget): void;
     (e: "update:target-rpm", value: number): void;
     (e: "update:kp", value: number): void;
     (e: "update:ki", value: number): void;
@@ -52,7 +47,7 @@ const emit = defineEmits<{
             <BaseCard variant="light" class="flex flex-col h-full min-h-0">
                 <div class="flex justify-between mb-2">
                     <h2 class="text-xl font-bold">
-                        <template v-if="controlsToggleData === 'first'">
+                        <template v-if="leftPanelView === 'logs'">
                             Logs
                         </template>
 
@@ -62,7 +57,7 @@ const emit = defineEmits<{
                     </h2>
 
                     <BaseButton
-                        v-if="controlsToggleData === 'second'"
+                        v-if="leftPanelView === 'control'"
                         @click="emit('toggle-regulation')"
                         variant="primary"
                     >
@@ -71,21 +66,18 @@ const emit = defineEmits<{
                 </div>
 
                 <LogPanel
-                    v-if="controlsToggleData === 'first'"
+                    v-if="leftPanelView === 'logs'"
                     :logs="logs"
                 ></LogPanel>
                 <MotorControl
                     v-else-if="
-                        controlsToggleData === 'second' &&
-                        isRegulation === false
+                        leftPanelView === 'control' && isRegulation === false
                     "
-                    :toggleData="motorToggleData"
-                    :labels="['Motor 1', 'Motor 2']"
-                    :pwm="pwm"
-                    :mode="mode"
+                    :manual-control="manualControl"
                     @update:toggle-data="
                         emit('update:motor-toggle-data', $event)
                     "
+					@update:motor-target="emit('update:motor-toggle-data', $event)"
                     @update:mode="emit('update:mode', $event)"
                     @update:pwm="emit('update:pwm', $event)"
                     @apply="emit('apply')"
@@ -93,16 +85,9 @@ const emit = defineEmits<{
                 ></MotorControl>
                 <MotorRegulation
                     v-else-if="
-                        controlsToggleData === 'second' && isRegulation === true
+                        leftPanelView === 'control' && isRegulation === true
                     "
-                    :toggleData="toggleData"
-                    :labels="['Motor 1', 'Motor 2']"
-                    :targetRpm="targetRpm"
-                    :kp="kp"
-                    :ki="ki"
-                    :kd="kd"
-                    :mode2="mode2"
-                    :isRegulating="isRegulating"
+                    :regulation-control="regulationControl"
                     @start-regulation="emit('start-regulation')"
                     @stop-regulation="emit('stop-regulation')"
                     @update:kd="emit('update:kd', $event)"
@@ -110,7 +95,7 @@ const emit = defineEmits<{
                     @update:kp="emit('update:kp', $event)"
                     @update:mode2="emit('update:mode2', $event)"
                     @update:target-rpm="emit('update:target-rpm', $event)"
-                    @update:toggle-data="emit('update:toggle-data', $event)"
+                    @update:motor-target="emit('update:motor-target', $event)"
                 ></MotorRegulation>
             </BaseCard>
         </div>

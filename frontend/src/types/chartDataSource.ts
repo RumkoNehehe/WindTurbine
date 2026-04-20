@@ -1,0 +1,1 @@
+export type ChartDataSource = 'live' | 'recorded'
