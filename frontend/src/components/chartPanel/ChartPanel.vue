@@ -5,6 +5,7 @@ import DataSourceToggle from "../base/BaseToggle.vue";
 import RecordingSelect from "./RecordingSelect.vue";
 import LineChart from "./LineChart.vue";
 import BaseButton from "../base/BaseButton.vue";
+import { ref } from "vue";
 
 defineProps<{
     toggleData: ToggleData;
@@ -26,6 +27,7 @@ const emit = defineEmits<{
     (e: "pause-data-flow"): void;
     (e: "clear-chart"): void;
 }>();
+
 </script>
 
 <template>

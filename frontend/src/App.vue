@@ -9,7 +9,6 @@ import type { ToggleData } from "./types/dataSource";
 import type { LiveDashboardPayloadDto } from "./types/liveDashboardPayloadDto";
 import type { LiveDashboardPayloadState } from "./types/liveDashBoardState";
 import type { Mode } from "./types/mode";
-import { isFunctionExpression } from "typescript";
 const motors = ref<Motor[]>([
     { name: "Motor1", pwm: 0, rpm: 0, mode: "Brake" },
     { name: "Motor2", pwm: 0, rpm: 0, mode: "Brake" },
@@ -21,6 +20,7 @@ const isConnected = ref(false);
 const isRecording = ref(false);
 const isChartDataFlowPaused = ref(true);
 const isAdmin = ref(true);
+const isRegulation = ref(false);
 const lastUpdate = ref("");
 
 const username = "Admin";
@@ -42,6 +42,14 @@ const record = ref<LiveDashboardPayloadState[]>([]);
 
 const controlPwm = ref(60);
 const mode = ref<Mode>("FORWARD");
+
+const toggleData = ref<ToggleData>("first");
+const targetRpm = ref(60);
+const kp = ref(1);
+const ki = ref(1);
+const kd = ref(1);
+const mode2 = ref<Mode>("FORWARD");
+const isRegulating = ref(false);
 
 function applyMotorChanges() {
     if (motorToggle.value === "first") {
@@ -72,7 +80,7 @@ function handleDisconnect() {
 }
 
 function startRecording() {
-	record.value = []
+    record.value = [];
     isRecording.value = true;
 }
 
@@ -100,36 +108,35 @@ function downloadRecording() {
 }
 
 function handleFileUpload(event: Event) {
-    const target = event.target as HTMLInputElement
-    const file = target.files?.[0]
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
 
-    if (!file) return
+    if (!file) return;
 
-    const reader = new FileReader()
+    const reader = new FileReader();
 
     reader.onload = () => {
         try {
-            const text = reader.result as string
-            const parsed = JSON.parse(text)
+            const text = reader.result as string;
+            const parsed = JSON.parse(text);
 
             if (!Array.isArray(parsed)) {
-                throw new Error('Invalid format')
+                throw new Error("Invalid format");
             }
 
             customChartPoints.value = parsed.map((item: any) => ({
                 label: item.lastUpdate,
                 motor1: item.motors?.[0]?.rpm ?? 0,
-                motor2: item.motors?.[1]?.rpm ?? 0
-            }))
-
+                motor2: item.motors?.[1]?.rpm ?? 0,
+            }));
         } catch (err) {
-            console.error(err)
-            alert('Invalid JSON file')
+            console.error(err);
+            alert("Invalid JSON file");
         }
-    }
+    };
 
-    reader.readAsText(file)
-    target.value = ''
+    reader.readAsText(file);
+    target.value = "";
 }
 
 function handleDashboardUpdate(payload: LiveDashboardPayloadDto) {
@@ -200,6 +207,33 @@ function resumeChartDataFlow() {
     isChartDataFlowPaused.value = false;
 }
 
+function startRegulation() {
+    let myMotor = "";
+    if (toggleData.value === "first") {
+        myMotor = "motor1";
+    } else {
+        myMotor = "motor2";
+    }
+    socket.emit("start_regulation", {
+        target: myMotor, // or "motor2" or "both"
+        target_rpm: targetRpm.value,
+        kp: kp.value,
+        ki: ki.value,
+        kd: kd.value,
+        mode: mode2.value,
+    });
+    isRegulating.value = true;
+}
+
+function stopRegulation() {
+    socket.emit("stop_regulation");
+    isRegulating.value = false;
+}
+
+function handleToggleRegulation() {
+    isRegulation.value = !isRegulation.value;
+}
+
 onMounted(() => {
     socket.connect();
 
@@ -213,7 +247,7 @@ onBeforeUnmount(() => {
     socket.off("disconnect", handleDisconnect);
     socket.off("dashboard_update", handleDashboardUpdate);
 
-	socket.disconnect()
+    socket.disconnect();
 });
 </script>
 
@@ -235,12 +269,29 @@ onBeforeUnmount(() => {
                     :mode="mode"
                     :logs="logs"
                     :motorToggleData="motorToggle"
+                    :is-regulation="isRegulation"
                     :pwm="controlPwm"
+                    :kd="kd"
+                    :kp="kp"
+                    :ki="ki"
+                    :is-regulating="isRegulating"
+                    :mode2="mode2"
+                    :toggle-data="toggleData"
+                    :target-rpm="targetRpm"
+                    @update:kd="kd = $event"
+                    @update:ki="ki = $event"
+                    @update:kp="kp = $event"
+                    @update:target-rpm="targetRpm = $event"
+                    @update:toggle-data="toggleData = $event"
+                    @start-regulation="startRegulation"
+                    @stop-regulation="stopRegulation"
                     @update:motor-toggle-data="motorToggle = $event"
                     @update:mode="mode = $event"
+                    @update:mode2="mode2 = $event"
                     @update:pwm="controlPwm = $event"
                     @apply="applyMotorChanges"
                     @stop-system="stopSystem"
+                    @toggle-regulation="handleToggleRegulation"
                 >
                 </MotorSection>
                 <ControlPanel
@@ -256,8 +307,8 @@ onBeforeUnmount(() => {
                     @download-file="downloadRecording"
                 />
 
-                <ChartPanel 
-					v-if="dataTypeToggle === 'first'"
+                <ChartPanel
+                    v-if="dataTypeToggle === 'first'"
                     class="h-full min-h-0"
                     :toggleData="dataTypeToggle"
                     :recordings="recordings"
@@ -273,8 +324,8 @@ onBeforeUnmount(() => {
                 >
                 </ChartPanel>
 
-                <ChartPanel 
-					v-if="dataTypeToggle === 'second'"
+                <ChartPanel
+                    v-if="dataTypeToggle === 'second'"
                     class="h-full min-h-0"
                     :toggleData="dataTypeToggle"
                     :recordings="recordings"

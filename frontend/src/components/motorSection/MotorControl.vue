@@ -40,7 +40,6 @@ function setMode(value: Mode) {
     emit("update:mode", value);
 }
 
-
 const pwmPercent = computed(() =>
   Math.round((props.pwm / 255) * 100)
 )

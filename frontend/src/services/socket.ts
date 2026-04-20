@@ -4,7 +4,7 @@ let socket: Socket | null = null
 
 export function getSocket() {
     if (!socket) {
-        socket = io("localhost:5000", {
+        socket = io("localhost:8000", {
             autoConnect: false,
         });
     }
