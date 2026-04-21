@@ -1,6 +1,5 @@
 from ..extensions import db
 
-
 class AppUser(db.Model):
     __tablename__ = "app_user"
 

@@ -9,12 +9,6 @@ class Config:
         "http://192.168.0.165:5173",
     ]
 
-    ADMIN_USERNAME = "admin"
-    ADMIN_PASSWORD = "admin123"
-
-    USER_USERNAME = "user"
-    USER_PASSWORD = "user123"
-
     ARDUINO_PORT = "COM5"
 
     BACKROUND_LOOP_SLEEP_IN_SECONDS = 0.5
