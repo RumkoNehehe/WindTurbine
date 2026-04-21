@@ -1,50 +1,82 @@
 from uuid import uuid4
 from flask import Blueprint, request, session, jsonify
+from werkzeug.security import check_password_hash
 
-from ..config import Config
 from .. import state
+from ..extensions import db
+from ..models.db_user import AppUser
 
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.post("/login")
 def login():
     data = request.get_json() or {}
-    username = data.get("username", "")
+    username = data.get("username", "").strip()
     password = data.get("password", "")
 
-    with state.auth_lock:
-        if username == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
-            if state.admin_session_id is not None:
+    if not username or not password:
+        return jsonify({
+            "success": False,
+            "message": "Username and password are required."
+        }), 400
+
+    try:
+        user = db.session.execute(
+            db.select(AppUser).where(AppUser.username == username)
+        ).scalar_one_or_none()
+
+        if user is None:
+            return jsonify({
+                "success": False,
+                "message": "Invalid credentials."
+            }), 401
+
+        if not check_password_hash(user.password, password):
+            return jsonify({
+                "success": False,
+                "message": "Invalid credentials."
+            }), 401
+
+        with state.auth_lock:
+            if user.user_type == "admin":
+                if state.admin_session_id is not None:
+                    return jsonify({
+                        "success": False,
+                        "message": "Admin is already logged in."
+                    }), 409
+
+                current_session_id = str(uuid4())
+                session["authenticated"] = True
+                session["role"] = "admin"
+                session["session_id"] = current_session_id
+                state.admin_session_id = current_session_id
+
                 return jsonify({
-                    "success": False,
-                    "message": "Admin is already logged in."
-                }), 409
+                    "success": True,
+                    "role": "admin"
+                }), 200
 
-            current_session_id = str(uuid4())
-            session["authenticated"] = True
-            session["role"] = "admin"
-            session["session_id"] = current_session_id
-            state.admin_session_id = current_session_id
+            if user.user_type == "user":
+                session["authenticated"] = True
+                session["role"] = "user"
+                session["session_id"] = str(uuid4())
 
-            return jsonify({
-                "success": True,
-                "role": "admin"
-            })
+                return jsonify({
+                    "success": True,
+                    "role": "user"
+                }), 200
 
-        if username == Config.USER_USERNAME and password == Config.USER_PASSWORD:
-            session["authenticated"] = True
-            session["role"] = "user"
-            session["session_id"] = str(uuid4())
+        return jsonify({
+            "success": False,
+            "message": "Invalid user type."
+        }), 403
 
-            return jsonify({
-                "success": True,
-                "role": "user"
-            })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": f"Database error: {str(e)}"
+        }), 500
 
-    return jsonify({
-        "success": False,
-        "message": "Invalid credentials."
-    }), 401
 
 @auth_bp.post("/logout")
 def logout():
