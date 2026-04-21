@@ -1,11 +1,6 @@
 import { ref } from "vue";
 import type { LiveDashboardPayloadState } from "@/types/states/liveDashBoardState";
-
-type ChartPoint = {
-    label: string;
-    motor1: number;
-    motor2: number;
-};
+import type { ChartPoint } from "@/types/chartPoint";
 
 export function useRecording() {
     const isRecording = ref(false);
@@ -47,6 +42,12 @@ export function useRecording() {
         URL.revokeObjectURL(url);
     }
 
+    function saveFileToDatabase() {
+        if (isRecording.value || record.value.length === 0) {
+            return;
+        }
+    }
+
     function handleFileUpload(event: Event) {
         const target = event.target as HTMLInputElement;
         const file = target.files?.[0];
@@ -70,8 +71,10 @@ export function useRecording() {
                         minute: "2-digit",
                         second: "2-digit",
                     }),
-                    motor1: item.motors?.[0]?.rpm ?? 0,
-                    motor2: item.motors?.[1]?.rpm ?? 0,
+                    motor1Rpm: item.motors?.[0]?.rpm ?? 0,
+                    motor1Pmw: item.motors?.[0]?.pmw ?? 0,
+                    motor2Pmw: item.motors?.[1]?.pmw ?? 0,
+                    motor2Rpm: item.motors?.[1]?.rpm ?? 0,
                 }));
             } catch (err) {
                 console.error(err);
@@ -95,6 +98,7 @@ export function useRecording() {
         appendToRecording,
         downloadRecording,
         handleFileUpload,
+        saveFileToDatabase,
         clearCustomChartData,
     };
 }

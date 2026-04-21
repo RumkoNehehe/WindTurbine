@@ -1,11 +1,6 @@
 import { ref, watch, type Ref } from "vue";
 import type { LiveDashboardPayloadState } from "@/types/states/liveDashBoardState";
-
-type ChartPoint = {
-    label: string;
-    motor1: number;
-    motor2: number;
-};
+import type { ChartPoint } from "@/types/chartPoint";
 
 export function useChartData(
     dashboardHistory: Ref<LiveDashboardPayloadState[]>,
@@ -25,6 +20,10 @@ export function useChartData(
         isChartDataFlowPaused.value = false;
     }
 
+    function toPwmPercent(number: number){
+       return Math.round((number/255)*100)
+    }
+
     watch(
         () => dashboardHistory.value.length,
         () => {
@@ -38,12 +37,14 @@ export function useChartData(
                     minute: "2-digit",
                     second: "2-digit",
                 }),
-                motor1: latest.motors[0]?.rpm ?? 0,
-                motor2: latest.motors[1]?.rpm ?? 0,
+                motor1Rpm: latest.motors[0]?.rpm ?? 0,
+                motor1Pmw: toPwmPercent(latest.motors[0]?.pwm ?? 0),
+                motor2Rpm: latest.motors[1]?.rpm ?? 0,
+                motor2Pmw: toPwmPercent(latest.motors[1]?.pwm ?? 0),
             });
 
             chartPoints.value = chartPoints.value.slice(-200);
-        }
+        },
     );
 
     return {

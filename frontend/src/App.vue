@@ -24,6 +24,7 @@ const {
     appendToRecording,
     downloadRecording,
     handleFileUpload,
+    saveFileToDatabase,
     clearCustomChartData,
 } = useRecording();
 
@@ -35,8 +36,7 @@ const {
     resumeChartDataFlow,
 } = useChartData(dashboardHistory);
 
-const { userRole, isCheckingAuth, loginError, login, logout } =
-    useAuth();
+const { userRole, isCheckingAuth, loginError, login, logout } = useAuth();
 
 const isAdmin = ref(true);
 const isRegulation = ref(false);
@@ -187,7 +187,8 @@ watch(
                     :is-admin="userRole"
                     :leftPanelToggle="controllsToggle"
                     :last-update="lastUpdate"
-					@log-off="logout"
+                    @log-off="logout"
+                    @save-file="saveFileToDatabase"
                     @update:left-panel-toggle="controllsToggle = $event"
                     @start-recording="startRecording"
                     @stop-recording="stopRecording"

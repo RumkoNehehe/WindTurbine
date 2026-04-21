@@ -17,7 +17,3 @@ def init_db(app):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
-
-    # # Optional: create tables automatically (only for dev)
-    # with app.app_context():
-    #     db.create_all()

@@ -5,16 +5,13 @@ import DataSourceToggle from "../base/BaseToggle.vue";
 import RecordingSelect from "./RecordingSelect.vue";
 import LineChart from "./LineChart.vue";
 import BaseButton from "../base/BaseButton.vue";
+import type { ChartPoint } from "@/types/chartPoint";
 
 defineProps<{
     chartDataSource: ChartDataSource;
     selectedRecording: string;
     isPaused: boolean;
-    points: {
-        label: string;
-        motor1: number;
-        motor2: number;
-    }[];
+    points: ChartPoint[];
     recordings: string[];
 }>();
 

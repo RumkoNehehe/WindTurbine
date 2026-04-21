@@ -4,6 +4,7 @@ from flask_cors import CORS
 from .config import Config
 from .extensions import socketio
 from .routes.authRoutes import auth_bp
+from .routes.recordingsRoutes import recording_bp
 from .socketEvents.motorEvents import register_motor_events
 from .extensions import init_db
 
@@ -24,6 +25,7 @@ def create_app():
     )
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(recording_bp)
     register_motor_events(socketio)
 
     @app.get("/")
