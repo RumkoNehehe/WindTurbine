@@ -57,8 +57,8 @@ def login():
                 }), 200
 
             if user.user_type == "user":
-                session["authenticated"] = True
-                session["role"] = "user"
+                session["authenticated"] =True
+                session["role"] =  "user"
                 session["session_id"] = str(uuid4())
 
                 return jsonify({
@@ -94,7 +94,7 @@ def logout():
 def me():
     if not session.get("authenticated"):
         return jsonify({
-            "authenticated": False
+            "authenticated":  False
         })
 
     return jsonify({

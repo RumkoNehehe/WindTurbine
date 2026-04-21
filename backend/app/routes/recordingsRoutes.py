@@ -5,6 +5,60 @@ from ..models.db_recording import Recording
 
 recording_bp = Blueprint("recording", __name__)
 
+@recording_bp.get("/recording/<int:recording_id>")
+def get_recording_by_id(recording_id):
+    try:
+        recording = db.session.execute(
+            db.select(Recording).where(Recording.id == recording_id)
+        ).scalar_one_or_none()
+
+        if recording is None:
+            return jsonify({
+                "message": "Recording not found"
+            }), 404
+        
+        return jsonify({
+            "id": recording.id,
+            "name": recording.name,
+            "message": "Recording found successfully",
+            "data": recording.data,
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": f"Database error: {str(e)}"
+        }), 500
+    
+
+@recording_bp.get("/recording")
+def get_recording_list():
+    try:
+        recordings = db.session.execute(
+            db.select(Recording.id, Recording.name)
+        ).all()
+
+        data = [
+            {
+                "id": r.id,
+                "name": r.name
+            }
+            for r in recordings
+        ]
+
+        return jsonify({
+            "message": "Recordings fetched successfully",
+            "data": data,
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": f"Database error: {str(e)}"
+        }), 500
+    
 @recording_bp.post("/recording")
 def create_recording():
     request_data = request.get_json() or {}
