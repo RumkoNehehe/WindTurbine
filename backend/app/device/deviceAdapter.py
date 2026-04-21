@@ -111,16 +111,6 @@ class ArduinoProtocol:
 # ============================================================
 
 class ArduinoSerialAdapter:
-    """
-    Produkčný základ pre backend.
-
-    Funkcie:
-    - connect/disconnect
-    - background TX heartbeat
-    - RX polling
-    - thread-safe command/state access
-    """
-
     def __init__(
         self,
         port: str,
@@ -205,7 +195,6 @@ class ArduinoSerialAdapter:
         self._worker_thread = None
         self._running = False
 
-        # bezpečný stav po stopnutí
         self.set_command(
             motor1_pwm=0,
             motor1_mode=MotorMode.BRAKE,
@@ -214,7 +203,6 @@ class ArduinoSerialAdapter:
             relay_on=False,
         )
 
-        # pošli safe frame raz pri zastavení, ak port ešte žije
         try:
             if self._serial and self._serial.is_open:
                 self._send_current_command_once()
