@@ -9,7 +9,7 @@ import MotorRegulation from "./MotorRegulation.vue";
 import BaseButton from "../base/BaseButton.vue";
 import type { LeftPanelView } from "@/types/leftPanelView";
 import type { MotorTarget } from "@/types/motorTarget";
-import type { ManualMotorControlState } from "@/types/states/ManualMotorControlState";
+import type { ManualMotorControlState } from "@/types/states/manualMotorControlState";
 import type { MotorRegulationState } from "@/types/states/regulationState";
 
 defineProps<{

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import MotorSection from "./components/motorSection/MotorSection.vue";
 import ControlPanel from "./components/controlPanel/ControlPanel.vue";
+import LoginForm from "./components/LoginForm.vue";
 import ChartPanel from "./components/chartPanel/ChartPanel.vue";
-import type { Mode } from "./types/mode";
 import { useSocketDashboard } from "./composables/useSocketDashboard";
 import { useRecording } from "./composables/useRecording";
 import { useChartData } from "./composables/userChartData";
+import { useAuth } from "./composables/useAuth";
 import type { ChartDataSource } from "./types/chartDataSource";
 import type { LeftPanelView } from "./types/leftPanelView";
 import type { MotorTarget } from "./types/motorTarget";
+import type { Mode } from "./types/mode";
 
 const { socket, motors, isConnected, lastUpdate, logs, dashboardHistory } =
     useSocketDashboard();
@@ -32,6 +34,9 @@ const {
     pauseChartDataFlow,
     resumeChartDataFlow,
 } = useChartData(dashboardHistory);
+
+const { userRole, isCheckingAuth, loginError, checkSession, login, logout } =
+    useAuth();
 
 const isAdmin = ref(true);
 const isRegulation = ref(false);
@@ -61,7 +66,7 @@ const manualControl = computed(() => ({
     motorTarget: motorToggle.value,
     pwm: controlPwm.value,
     mode: mode.value,
-}))
+}));
 
 const regulationControl = computed(() => ({
     motorTarget: toggleData.value,
@@ -71,7 +76,7 @@ const regulationControl = computed(() => ({
     kd: kd.value,
     mode: mode2.value,
     isRegulating: isRegulating.value,
-}))
+}));
 
 function applyMotorChanges() {
     if (motorToggle.value === "motor1") {
@@ -114,6 +119,10 @@ function handleToggleRegulation() {
     isRegulation.value = !isRegulation.value;
 }
 
+async function handleLogin(username: string, password: string) {
+    await login(username, password);
+}
+
 watch(
     () => dashboardHistory.value.length,
     () => {
@@ -133,22 +142,35 @@ watch(
             <h1 class="text-3xl font-bold text-center mb-6">
                 Ovládanie elektrárne
             </h1>
-
-            <div class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0">
+            <div
+                v-if="isCheckingAuth"
+                class="flex min-h-screen items-center justify-center bg-gray-800 text-white"
+            >
+                Loading...
+            </div>
+            <LoginForm
+                v-else-if="userRole === 'guest'"
+                :error-message="loginError"
+                @login="handleLogin"
+            />
+            <div
+                v-else
+                class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0"
+            >
                 <MotorSection
                     class="h-full min-h-0"
                     :motors="motors"
                     :logs="logs"
-					:is-admin="isAdmin"
-					:is-regulation="isRegulation"
-					:left-panel-view="controllsToggle"
-					:regulation-control="regulationControl"
-					:manual-control="manualControl"
+                    :is-admin="isAdmin"
+                    :is-regulation="isRegulation"
+                    :left-panel-view="controllsToggle"
+                    :regulation-control="regulationControl"
+                    :manual-control="manualControl"
                     @update:kd="kd = $event"
                     @update:ki="ki = $event"
                     @update:kp="kp = $event"
                     @update:target-rpm="targetRpm = $event"
-					@update:motor-target="toggleData = $event"
+                    @update:motor-target="toggleData = $event"
                     @update:motor-toggle-data="motorToggle = $event"
                     @update:mode="mode = $event"
                     @update:mode2="mode2 = $event"

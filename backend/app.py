@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, session, jsonify
+from flask_cors import CORS
+from uuid import uuid4
 from flask_socketio import SocketIO
 from datetime import datetime, timezone
 from simple_pid import PID
@@ -9,13 +11,33 @@ from deviceAdapter import ArduinoSerialAdapter, MotorMode
 # Flask app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret!"
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = False
 
-# SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+CORS(
+    app,
+    supports_credentials=True,
+    origins=["http://localhost:5173", "http://192.168.0.165:5173"]
+)
+
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=["http://localhost:5173", "http://192.168.0.165:5173"],
+    async_mode="threading"
+)
 clients_count = 0
 background_thread = None
 thread_lock = threading.Lock()
 running = False
+admin_session_id = None
+auth_lock = threading.Lock()
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
+
+USER_USERNAME = "user"
+USER_PASSWORD = "user123"
 
 state = {
     "isConnected": True,
@@ -39,6 +61,9 @@ regulation_config = {
 
 pid_motor1 = None
 pid_motor2 = None
+
+def is_admin():
+    return session.get("authenticated") and session.get("role") == "admin"
 
 def clamp_pwm(value):
     return max(0, min(255, int(round(value))))
@@ -142,6 +167,13 @@ def handle_disconnect():
         clients_count -= 1
         print(f"Client disconnected, count={clients_count}")
 
+        if session.get("role") == "admin":
+            current_session_id = session.get("session_id")
+            with auth_lock:
+                if current_session_id == admin_session_id:
+                    admin_session_id = None
+                    print("Admin session released on disconnect")
+
         if clients_count <= 0:
             clients_count = 0
             running = False
@@ -160,6 +192,9 @@ def handle_disconnect():
 
 @socketio.on("stop_system")
 def handle_stop():
+    if not is_admin():
+        print("Unauthorized stop_system")
+        return
     global regulation_running, pid_motor1, pid_motor2
 
     print("Received request to stop system")
@@ -178,6 +213,9 @@ def handle_stop():
 
 @socketio.on("set_motor_1")
 def handle_set_motor1(data):
+    if not is_admin():
+        print("Unauthorized stop_system")
+        return
     print("received request to set motor 1")
     pwm = data.get("pwm", 0)
     mode_str = data.get("mode", "BRAKE")
@@ -192,6 +230,9 @@ def handle_set_motor1(data):
 
 @socketio.on("set_motor_2")
 def handle_set_motor2(data):
+    if not is_admin():
+        print("Unauthorized stop_system")
+        return
     print("received request to set motor 2")
     pwm = data.get("pwm", 0)
     mode_str = data.get("mode", "BRAKE")
@@ -206,6 +247,9 @@ def handle_set_motor2(data):
 
 @socketio.on("start_regulation")
 def handle_start_regulation(data):
+    if not is_admin():
+        print("Unauthorized stop_system")
+        return
     global regulation_running, regulation_thread, pid_motor1, pid_motor2
 
     with regulation_lock:
@@ -252,6 +296,9 @@ def handle_start_regulation(data):
 
 @socketio.on("stop_regulation")
 def handle_stop_regulation():
+    if not is_admin():
+        print("Unauthorized stop_system")
+        return
     global regulation_running, pid_motor1, pid_motor2
 
     with regulation_lock:
@@ -268,6 +315,76 @@ def handle_stop_regulation():
 
         print("Stopped regulation")
 
+@app.post("/login")
+def login():
+    global admin_session_id
+
+    data = request.get_json() or {}
+    username = data.get("username", "")
+    password = data.get("password", "")
+
+    with auth_lock:
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            if admin_session_id is not None:
+                return jsonify({
+                    "success": False,
+                    "message": "Admin is already logged in."
+                }), 409
+
+            current_session_id = str(uuid4())
+            session["authenticated"] = True
+            session["role"] = "admin"
+            session["session_id"] = current_session_id
+
+            admin_session_id = current_session_id
+
+            return jsonify({
+                "success": True,
+                "role": "admin"
+            })
+
+        if username == USER_USERNAME and password == USER_PASSWORD:
+            session["authenticated"] = True
+            session["role"] = "user"
+            session["session_id"] = str(uuid4())
+
+            return jsonify({
+                "success": True,
+                "role": "user"
+            })
+
+    return jsonify({
+        "success": False,
+        "message": "Invalid credentials."
+    }), 401
+
+@app.post("/logout")
+def logout():
+    global admin_session_id
+
+    with auth_lock:
+        if session.get("role") == "admin":
+            current_session_id = session.get("session_id")
+            if current_session_id == admin_session_id:
+                admin_session_id = None
+
+        session.clear()
+
+    return jsonify({
+        "success": True
+    })
+
+@app.get("/me")
+def me():
+    if not session.get("authenticated"):
+        return jsonify({
+            "authenticated": False
+        })
+
+    return jsonify({
+        "authenticated": True,
+        "role": session.get("role")
+    })
 # ---- Main ----
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=8000, allow_unsafe_werkzeug=True)

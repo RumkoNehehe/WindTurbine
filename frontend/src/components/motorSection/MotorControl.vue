@@ -4,7 +4,7 @@ import BaseToggle from "../base/BaseToggle.vue";
 import BaseButton from "../base/BaseButton.vue";
 import type { Mode } from "@/types/mode";
 import type { MotorTarget } from "@/types/motorTarget";
-import type {ManualMotorControlState  } from "@/types/states/ManualMotorControlState";
+import type {ManualMotorControlState  } from "@/types/states/manualMotorControlState";
 
 const props = defineProps<{
     manualControl: ManualMotorControlState
