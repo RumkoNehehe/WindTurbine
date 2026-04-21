@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from simple_pid import PID
 from ..config import Config
-from backend.app.device.deviceAdapter import ArduinoSerialAdapter, MotorMode
+from .deviceAdapter import ArduinoSerialAdapter, MotorMode
 
 from ..extensions import socketio
 from ..config import Config
