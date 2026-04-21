@@ -3,7 +3,7 @@ from flask_socketio import emit
 
 from .. import state
 from ..auth import is_admin
-from ..device import (
+from ..device.device import (
     connect_system,
     disconnect_system,
     stop_system,

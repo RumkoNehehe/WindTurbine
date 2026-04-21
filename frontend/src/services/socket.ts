@@ -6,6 +6,7 @@ export function getSocket() {
     if (!socket) {
         socket = io("localhost:8000", {
             autoConnect: false,
+            withCredentials: true
         });
     }
 

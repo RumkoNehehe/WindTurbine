@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from simple_pid import PID
-from deviceAdapter import ArduinoSerialAdapter, MotorMode
+from ..config import Config
+from backend.app.device.deviceAdapter import ArduinoSerialAdapter, MotorMode
 
-from .extensions import socketio
-from .config import Config
-from . import state
+from ..extensions import socketio
+from ..config import Config
+from .. import state
 
 adapter = ArduinoSerialAdapter(port=Config.ARDUINO_PORT)
 
@@ -13,7 +14,7 @@ def clamp_pwm(value):
 
 def build_pid(kp, ki, kd, target_rpm, starting_output=0.0):
     pid = PID(kp, ki, kd, setpoint=target_rpm)
-    pid.sample_time = 0.1
+    pid.sample_time = Config.PID_SAMPLE_TIME_IN_SECONDS  
     pid.output_limits = (0, 255)
     pid.set_auto_mode(True, last_output=starting_output)
     return pid
@@ -52,7 +53,7 @@ def background_loop():
         except Exception as e:
             print(f"Background loop error: {e}")
 
-        socketio.sleep(0.5)
+        socketio.sleep(Config.BACKROUND_LOOP_SLEEP_IN_SECONDS)
 
 def regulation_loop():
     print("Regulation loop started")
@@ -76,7 +77,7 @@ def regulation_loop():
         except Exception as e:
             print(f"Regulation loop error: {e}")
 
-        socketio.sleep(0.1)
+        socketio.sleep(Config.PID_SAMPLE_TIME_IN_SECONDS)
 
     print("Regulation loop stopped")
 
