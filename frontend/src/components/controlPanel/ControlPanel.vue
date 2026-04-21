@@ -4,6 +4,7 @@ import BaseButton from "../base/BaseButton.vue";
 import StatusBadge from "./StatusBadge.vue";
 import DataSourceToggle from "../base/BaseToggle.vue";
 import type { LeftPanelView } from "@/types/leftPanelView";
+import type { UserRole } from "@/composables/useAuth";
 
 defineProps<{
     leftPanelToggle: LeftPanelView;
@@ -11,7 +12,7 @@ defineProps<{
     isRecording: boolean;
     lastUpdate: string;
     username: string;
-    isAdmin: boolean;
+    isAdmin: UserRole;
 }>();
 
 const emit = defineEmits<{
@@ -65,10 +66,10 @@ const leftPanelOptions = [
             variant="light"
             class="flex flex-col justify-end mt-auto items-center gap-2"
         >
-            <h3 class="text-md font-bold mb-2">Logged user: {{ username }}</h3>
+            <h3 class="text-md font-bold mb-2">Logged: {{ username }}</h3>
 
             <DataSourceToggle
-                v-if="isAdmin"
+                v-if="isAdmin === 'admin'"
                 :options="leftPanelOptions"
                 :model-value="leftPanelToggle"
                 @update:model-value="
@@ -76,7 +77,7 @@ const leftPanelOptions = [
                 "
             />
             <BaseButton variant="danger" @click="emit('log-off')">
-                Log Off
+                Log out
             </BaseButton>
         </BaseCard>
     </BaseCard>

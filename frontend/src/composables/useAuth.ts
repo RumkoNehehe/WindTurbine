@@ -12,7 +12,7 @@ export function useAuth() {
             isCheckingAuth.value = true;
             loginError.value = "";
 
-            const response = await fetch("http://192.168.0.165:8000/me", {
+            const response = await fetch("http://localhost:8000/me", {
                 credentials: "include",
             });
 
@@ -37,7 +37,7 @@ export function useAuth() {
         try {
             loginError.value = "";
 
-            const response = await fetch("http://192.168.0.165:8000/login", {
+            const response = await fetch("http://localhost:8000/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export function useAuth() {
 
     async function logout() {
         try {
-            await fetch("http://192.168.0.165:8000/logout", {
+            await fetch("http://localhost:8000/logout", {
                 method: "POST",
                 credentials: "include",
             });
@@ -86,7 +86,6 @@ export function useAuth() {
         userRole,
         isCheckingAuth,
         loginError,
-        checkSession,
         login,
         logout,
     };

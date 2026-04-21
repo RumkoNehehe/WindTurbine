@@ -35,13 +35,11 @@ const {
     resumeChartDataFlow,
 } = useChartData(dashboardHistory);
 
-const { userRole, isCheckingAuth, loginError, checkSession, login, logout } =
+const { userRole, isCheckingAuth, loginError, login, logout } =
     useAuth();
 
 const isAdmin = ref(true);
 const isRegulation = ref(false);
-
-const username = "Admin";
 
 const chartDataToggle = ref<ChartDataSource>("live");
 const controllsToggle = ref<LeftPanelView>("logs");
@@ -185,10 +183,11 @@ watch(
                 <ControlPanel
                     :isConnected="isConnected"
                     :is-recording="isRecording"
-                    :username="username"
-                    :is-admin
+                    :username="userRole.toString()"
+                    :is-admin="userRole"
                     :leftPanelToggle="controllsToggle"
                     :last-update="lastUpdate"
+					@log-off="logout"
                     @update:left-panel-toggle="controllsToggle = $event"
                     @start-recording="startRecording"
                     @stop-recording="stopRecording"

@@ -276,13 +276,13 @@ def handle_start_regulation(data):
         pid_motor1 = None
         pid_motor2 = None
 
-        if target in ("motor1", "both"):
+        if target in ("motor1"):
             pid_motor1 = build_pid(
                 kp, ki, kd, target_rpm,
                 starting_output=float(current.motor1.pwm)
             )
 
-        if target in ("motor2", "both"):
+        if target in ("motor2"):
             pid_motor2 = build_pid(
                 kp, ki, kd, target_rpm,
                 starting_output=float(current.motor2.pwm)

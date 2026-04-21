@@ -15,7 +15,6 @@ import type { MotorRegulationState } from "@/types/states/regulationState";
 defineProps<{
     motors: Motor[];
     logs: string[];
-    isAdmin: boolean;
     isRegulation: boolean;
     leftPanelView: LeftPanelView;
     manualControl: ManualMotorControlState;
