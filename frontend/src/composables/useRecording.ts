@@ -3,6 +3,7 @@ import type { LiveDashboardPayloadState } from "@/types/states/liveDashBoardStat
 import type { ChartPoint } from "@/types/chartPoint";
 import type { RecordingListItem } from "@/types/recordingListItem";
 import type { RecordingSnapshot } from "@/types/recordingSnapshot";
+import {config} from '@/config'
 
 export function useRecording() {
     const isRecording = ref(false);
@@ -28,7 +29,7 @@ export function useRecording() {
 
     async function fetchRecordings() {
         try {
-            const response = await fetch("http://localhost:8000/recording", {
+            const response = await fetch(`${config.backendBaseUrl}/recording`, {
                 credentials: "include",
             });
 
@@ -44,7 +45,7 @@ export function useRecording() {
     }
 
     async function fetchRecordingById(id: number) {
-        const response = await fetch(`http://localhost:8000/recording/${id}`, {
+        const response = await fetch(`${config.backendBaseUrl}/recording/${id}`, {
             credentials: "include",
         });
 
@@ -89,7 +90,7 @@ export function useRecording() {
             .replace("T", "_")
             .replace(":", "-")}`;
         try {
-            const response = await fetch("http://localhost:8000/recording", {
+            const response = await fetch(`${config.backendBaseUrl}/recording`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

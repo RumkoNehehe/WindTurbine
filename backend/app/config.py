@@ -13,3 +13,6 @@ class Config:
 
     BACKROUND_LOOP_SLEEP_IN_SECONDS = 0.5
     PID_SAMPLE_TIME_IN_SECONDS = 0.1
+
+    DATABASE_CONNECTION_STRING = "postgresql://app_user:app_password@localhost:5433/app_db"
+    

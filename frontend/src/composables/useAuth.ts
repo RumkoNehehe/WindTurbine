@@ -1,4 +1,5 @@
 import { ref, onMounted } from "vue";
+import {config} from '@/config'
 
 export type UserRole = "guest" | "user" | "admin";
 
@@ -12,7 +13,7 @@ export function useAuth() {
             isCheckingAuth.value = true;
             loginError.value = "";
 
-            const response = await fetch("http://localhost:8000/me", {
+            const response = await fetch(`${config.backendBaseUrl}/me`, {
                 credentials: "include",
             });
 
@@ -37,7 +38,7 @@ export function useAuth() {
         try {
             loginError.value = "";
 
-            const response = await fetch("http://localhost:8000/login", {
+            const response = await fetch(`${config.backendBaseUrl}/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -67,7 +68,7 @@ export function useAuth() {
 
     async function logout() {
         try {
-            await fetch("http://localhost:8000/logout", {
+            await fetch(`${config.backendBaseUrl}/logout`, {
                 method: "POST",
                 credentials: "include",
             });

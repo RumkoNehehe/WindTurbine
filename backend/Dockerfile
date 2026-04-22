@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8000
 
 # Change this to your real start command
-CMD ["python", "app.py"]
+CMD ["python", "run.py"]
