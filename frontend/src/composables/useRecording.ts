@@ -1,11 +1,15 @@
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import type { LiveDashboardPayloadState } from "@/types/states/liveDashBoardState";
 import type { ChartPoint } from "@/types/chartPoint";
+import type { RecordingListItem } from "@/types/recordingListItem";
 
 export function useRecording() {
     const isRecording = ref(false);
     const record = ref<LiveDashboardPayloadState[]>([]);
     const customChartPoints = ref<ChartPoint[]>([]);
+    const recordings = ref<RecordingListItem[]>([]);
+    const selectedRecordingId = ref<number | null>(null);
+    const selectedRecording = ref<any>(null);
 
     function startRecording() {
         record.value = [];
@@ -19,6 +23,68 @@ export function useRecording() {
     function appendToRecording(entry: LiveDashboardPayloadState) {
         if (!isRecording.value) return;
         record.value.push(entry);
+    }
+
+    async function fetchRecordings() {
+        try {
+            const response = await fetch("http://localhost:8000/recording", {
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            recordings.value = result.data;
+        } catch (error) {
+            console.error("Fetch recordings failed:", error);
+        }
+    }
+
+    async function fetchRecordingById(id: number) {
+        const response = await fetch(`http://localhost:8000/recording/${id}`, {
+            credentials: "include",
+        });
+
+        const result = await response.json();
+        return mapRecordingToChartPoints(result.data);
+    }
+
+    type RecordingMotor = {
+        name: string;
+        pwm: number;
+        rpm: number;
+        mode: string;
+    };
+
+    type RecordingSnapshot = {
+        lastUpdate: string;
+        motors: RecordingMotor[];
+    };
+
+    function mapRecordingToChartPoints(
+        data: RecordingSnapshot[],
+    ): ChartPoint[] {
+        return data.map((snapshot) => {
+            const motor1 = snapshot.motors.find((m) => m.name === "Motor 1");
+            const motor2 = snapshot.motors.find((m) => m.name === "Motor 2");
+
+            return {
+                label: new Date(snapshot.lastUpdate).toLocaleTimeString(
+                    "en-GB",
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                    },
+                ),
+                motor1Rpm: motor1?.rpm ?? 0,
+                motor1Pwm: motor1?.pwm ?? 0,
+                motor2Rpm: motor2?.rpm ?? 0,
+                motor2Pwm: motor2?.pwm ?? 0,
+            };
+        });
     }
 
     function downloadRecording() {
@@ -72,9 +138,9 @@ export function useRecording() {
                         second: "2-digit",
                     }),
                     motor1Rpm: item.motors?.[0]?.rpm ?? 0,
-                    motor1Pmw: item.motors?.[0]?.pmw ?? 0,
-                    motor2Pmw: item.motors?.[1]?.pmw ?? 0,
+                    motor1Pwm: item.motors?.[0]?.pmw ?? 0,
                     motor2Rpm: item.motors?.[1]?.rpm ?? 0,
+                    motor2Pwm: item.motors?.[1]?.pmw ?? 0,
                 }));
             } catch (err) {
                 console.error(err);
@@ -90,9 +156,16 @@ export function useRecording() {
         customChartPoints.value = [];
     }
 
+    onMounted(() => {
+        fetchRecordings();
+    });
+
     return {
         isRecording,
         customChartPoints,
+        recordings,
+        selectedRecordingId,
+        fetchRecordingById,
         startRecording,
         stopRecording,
         appendToRecording,

@@ -1,16 +1,18 @@
 <script setup lang="ts">
+import type { RecordingListItem } from '@/types/recordingListItem';
+
 defineProps<{
-    selectedRecording: string
-    recordings: string[]
+    selectedRecording: number | null
+    recordings: RecordingListItem[]
 }>()
 
 const emit = defineEmits<{
-    (e: 'update:selected-recording', value: string): void
+    (e: 'update:selected-recording', value: number): void
 }>()
 
 function handleChange(event: Event) {
     const target = event.target as HTMLSelectElement
-    emit('update:selected-recording', target.value)
+    emit('update:selected-recording', Number(target.value))
 }
 </script>
 
@@ -26,8 +28,8 @@ function handleChange(event: Event) {
                 Select a recording
             </option>
 
-            <option v-for="recording in recordings" :key="recording" :value="recording">
-                {{ recording }}
+            <option v-for="recording in recordings" :key="recording.id" :value="recording.id">
+                {{ recording.name }}
             </option>
         </select>
     </div>

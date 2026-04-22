@@ -18,7 +18,10 @@ const { socket, motors, isConnected, lastUpdate, logs, dashboardHistory } =
 
 const {
     isRecording,
+    recordings,
+    selectedRecordingId,
     customChartPoints,
+    fetchRecordingById,
     startRecording,
     stopRecording,
     appendToRecording,
@@ -44,10 +47,6 @@ const isRegulation = ref(false);
 const chartDataToggle = ref<ChartDataSource>("live");
 const controllsToggle = ref<LeftPanelView>("logs");
 const motorToggle = ref<MotorTarget>("motor1");
-
-const selectedRecording = ref("");
-
-const recordings = ref(["Recording 01", "Recording 02", "Recording 03"]);
 
 const controlPwm = ref(128);
 const mode = ref<Mode>("FORWARD");
@@ -130,6 +129,13 @@ watch(
         appendToRecording(latest);
     },
 );
+
+watch(selectedRecordingId, async (newId) => {
+    if (!newId) return;
+
+    customChartPoints.value = await fetchRecordingById(newId);
+});
+
 </script>
 
 <template>
@@ -200,7 +206,7 @@ watch(
                     class="h-full min-h-0"
                     :chartDataSource="chartDataToggle"
                     :recordings="recordings"
-                    :selected-recording="selectedRecording"
+                    :selectedRecordingId="selectedRecordingId"
                     :points="chartPoints"
                     :is-paused="isChartDataFlowPaused"
                     @clear-chart="clearChartData"
@@ -208,7 +214,7 @@ watch(
                     @resume-data-flow="resumeChartDataFlow"
                     @upload-file="handleFileUpload"
                     @update:chart-data-source="chartDataToggle = $event"
-                    @update:selected-recording="selectedRecording = $event"
+                    @update:selected-recording="selectedRecordingId = $event"
                 >
                 </ChartPanel>
 
@@ -217,15 +223,15 @@ watch(
                     class="h-full min-h-0"
                     :chartDataSource="chartDataToggle"
                     :recordings="recordings"
-                    :selected-recording="selectedRecording"
+                    :selectedRecordingId="selectedRecordingId"
                     :points="customChartPoints"
                     :is-paused="isChartDataFlowPaused"
                     @clear-chart="clearCustomChartData"
                     @pause-data-flow="pauseChartDataFlow"
                     @resume-data-flow="resumeChartDataFlow"
                     @upload-file="handleFileUpload"
-                    @update:toggle-data="chartDataToggle = $event"
-                    @update:selected-recording="selectedRecording = $event"
+                    @update:chart-data-source="chartDataToggle = $event"
+                    @update:selected-recording="selectedRecordingId = $event"
                 >
                 </ChartPanel>
             </div>

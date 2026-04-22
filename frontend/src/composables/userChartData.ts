@@ -38,9 +38,9 @@ export function useChartData(
                     second: "2-digit",
                 }),
                 motor1Rpm: latest.motors[0]?.rpm ?? 0,
-                motor1Pmw: toPwmPercent(latest.motors[0]?.pwm ?? 0),
+                motor1Pwm: toPwmPercent(latest.motors[0]?.pwm ?? 0),
                 motor2Rpm: latest.motors[1]?.rpm ?? 0,
-                motor2Pmw: toPwmPercent(latest.motors[1]?.pwm ?? 0),
+                motor2Pwm: toPwmPercent(latest.motors[1]?.pwm ?? 0),
             });
 
             chartPoints.value = chartPoints.value.slice(-200);

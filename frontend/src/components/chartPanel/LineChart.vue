@@ -46,14 +46,14 @@ const chartData = computed(() => ({
         },
         {
             label: "Motor 1 PWM%",
-            data: props.points.map((p) => p.motor1Pmw),
+            data: props.points.map((p) => p.motor1Pwm),
             tension: 0.25,
             borderColor: "#1e88e5", // strong blue
             backgroundColor: "#1e88e5",
         },
         {
             label: "Motor 2 PWM%",
-            data: props.points.map((p) => p.motor2Pmw),
+            data: props.points.map((p) => p.motor2Pwm),
             tension: 0.25,
             borderColor: "#90caf9", // lighter blue
             backgroundColor: "#90caf9",
