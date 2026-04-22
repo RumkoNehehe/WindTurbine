@@ -2,6 +2,7 @@ import { onMounted, ref } from "vue";
 import type { LiveDashboardPayloadState } from "@/types/states/liveDashBoardState";
 import type { ChartPoint } from "@/types/chartPoint";
 import type { RecordingListItem } from "@/types/recordingListItem";
+import type { RecordingSnapshot } from "@/types/recordingSnapshot";
 
 export function useRecording() {
     const isRecording = ref(false);
@@ -51,18 +52,6 @@ export function useRecording() {
         return mapRecordingToChartPoints(result.data);
     }
 
-    type RecordingMotor = {
-        name: string;
-        pwm: number;
-        rpm: number;
-        mode: string;
-    };
-
-    type RecordingSnapshot = {
-        lastUpdate: string;
-        motors: RecordingMotor[];
-    };
-
     function mapRecordingToChartPoints(
         data: RecordingSnapshot[],
     ): ChartPoint[] {
@@ -87,6 +76,45 @@ export function useRecording() {
         });
     }
 
+    async function saveFileToDatabase() {
+        if (isRecording.value || record.value.length === 0) {
+            return;
+        }
+
+        const now = new Date();
+
+        const name = `rec-${now
+            .toISOString()
+            .slice(0, 16)
+            .replace("T", "_")
+            .replace(":", "-")}`;
+        try {
+            const response = await fetch("http://localhost:8000/recording", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    data: record.value,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || `HTTP error: ${response.status}`,
+                );
+            }
+
+            await fetchRecordings();
+        } catch (error) {
+            console.error("Save recording failed:", error);
+        }
+    }
+
     function downloadRecording() {
         if (isRecording.value || record.value.length === 0) {
             return;
@@ -106,12 +134,6 @@ export function useRecording() {
         a.click();
 
         URL.revokeObjectURL(url);
-    }
-
-    function saveFileToDatabase() {
-        if (isRecording.value || record.value.length === 0) {
-            return;
-        }
     }
 
     function handleFileUpload(event: Event) {

@@ -12,9 +12,26 @@ import type { ChartDataSource } from "./types/chartDataSource";
 import type { LeftPanelView } from "./types/leftPanelView";
 import type { MotorTarget } from "./types/motorTarget";
 import type { Mode } from "./types/mode";
+import { useRegulation } from "./composables/useRegulation";
+
 
 const { socket, motors, isConnected, lastUpdate, logs, dashboardHistory } =
-    useSocketDashboard();
+useSocketDashboard();
+
+const {
+    isRegulation,
+    motorTarget: regulationMotorTarget,
+    targetRpm,
+    kp,
+    ki,
+    kd,
+    mode: regulationMode,
+    isRegulating,
+    regulationControl,
+    startRegulation,
+    stopRegulation,
+    toggleRegulationView,
+} = useRegulation(socket);
 
 const {
     isRecording,
@@ -41,9 +58,6 @@ const {
 
 const { userRole, isCheckingAuth, loginError, login, logout } = useAuth();
 
-const isAdmin = ref(true);
-const isRegulation = ref(false);
-
 const chartDataToggle = ref<ChartDataSource>("live");
 const controllsToggle = ref<LeftPanelView>("logs");
 const motorToggle = ref<MotorTarget>("motor1");
@@ -51,28 +65,11 @@ const motorToggle = ref<MotorTarget>("motor1");
 const controlPwm = ref(128);
 const mode = ref<Mode>("FORWARD");
 
-const toggleData = ref<MotorTarget>("motor1");
-const targetRpm = ref(500);
-const kp = ref(0.6);
-const ki = ref(0.5);
-const kd = ref(0.12);
-const mode2 = ref<Mode>("FORWARD");
-const isRegulating = ref(false);
 
 const manualControl = computed(() => ({
     motorTarget: motorToggle.value,
     pwm: controlPwm.value,
     mode: mode.value,
-}));
-
-const regulationControl = computed(() => ({
-    motorTarget: toggleData.value,
-    targetRpm: targetRpm.value,
-    kp: kp.value,
-    ki: ki.value,
-    kd: kd.value,
-    mode: mode2.value,
-    isRegulating: isRegulating.value,
 }));
 
 function applyMotorChanges() {
@@ -93,23 +90,6 @@ function applyMotorChanges() {
 function stopSystem() {
     console.log("sending event to stop system");
     socket.emit("stop_system");
-}
-
-function startRegulation() {
-    socket.emit("start_regulation", {
-        target: toggleData.value,
-        target_rpm: targetRpm.value,
-        kp: kp.value,
-        ki: ki.value,
-        kd: kd.value,
-        mode: mode2.value,
-    });
-    isRegulating.value = true;
-}
-
-function stopRegulation() {
-    socket.emit("stop_regulation");
-    isRegulating.value = false;
 }
 
 function handleToggleRegulation() {
@@ -135,7 +115,6 @@ watch(selectedRecordingId, async (newId) => {
 
     customChartPoints.value = await fetchRecordingById(newId);
 });
-
 </script>
 
 <template>
@@ -152,11 +131,12 @@ watch(selectedRecordingId, async (newId) => {
             >
                 Loading...
             </div>
-            <LoginForm
+            <div
                 v-else-if="userRole === 'guest'"
-                :error-message="loginError"
-                @login="handleLogin"
-            />
+                class="flex justify-center items-start mt-10"
+            >
+                <LoginForm :error-message="loginError" @login="handleLogin" />
+            </div>
             <div
                 v-else
                 class="grid grid-cols-[1fr_0.6fr_1.6fr] gap-6 flex-1 min-h-0"
@@ -165,7 +145,6 @@ watch(selectedRecordingId, async (newId) => {
                     class="h-full min-h-0"
                     :motors="motors"
                     :logs="logs"
-                    :is-admin="isAdmin"
                     :is-regulation="isRegulation"
                     :left-panel-view="controllsToggle"
                     :regulation-control="regulationControl"
@@ -174,16 +153,16 @@ watch(selectedRecordingId, async (newId) => {
                     @update:ki="ki = $event"
                     @update:kp="kp = $event"
                     @update:target-rpm="targetRpm = $event"
-                    @update:motor-target="toggleData = $event"
+                    @update:motor-target="regulationMotorTarget = $event"
                     @update:motor-toggle-data="motorToggle = $event"
                     @update:mode="mode = $event"
-                    @update:mode2="mode2 = $event"
+                    @update:mode2="regulationMode = $event"
                     @update:pwm="controlPwm = $event"
                     @start-regulation="startRegulation"
                     @stop-regulation="stopRegulation"
                     @apply="applyMotorChanges"
                     @stop-system="stopSystem"
-                    @toggle-regulation="handleToggleRegulation"
+                    @toggle-regulation="toggleRegulationView"
                 >
                 </MotorSection>
                 <ControlPanel

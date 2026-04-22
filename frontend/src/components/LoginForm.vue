@@ -22,7 +22,7 @@ function handleSubmit() {
 <template>
         <BaseCard variant="dark" class="w-full max-w-md p-6 bg-gray-800 shadow-lg">
             <h1 class="mb-6 text-center text-3xl font-bold text-white">
-                Prihlásenie
+                Log in
             </h1>
 
             <div class="flex flex-col gap-4">
