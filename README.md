@@ -214,10 +214,6 @@ The system is designed to run on **Raspberry Pi**:
 
 * Monorepo structure (frontend + backend)
 * Git used for version control
-* Semantic commit messages:
-
-  * `feat`, `fix`, `refactor`, `docs`, `chore`
-
 ---
 
 ## 📄 License
