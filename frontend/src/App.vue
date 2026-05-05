@@ -122,8 +122,8 @@ watch(selectedRecordingId, async (newId) => {
         <div
             class="max-w-400 mx-auto bg-gray-700 rounded-2xl flex flex-col h-full p-6"
         >
-            <h1 class="text-3xl font-bold text-center mb-6">
-                Ovládanie elektrárne
+            <h1 class="text-3xl font-bold text-center mb-6 text-white">
+                Wind Turbine
             </h1>
             <div
                 v-if="isCheckingAuth"
