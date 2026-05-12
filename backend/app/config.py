@@ -7,14 +7,15 @@ class Config:
     CORS_ORIGINS = [
         "http://localhost:5173",
         "http://192.168.0.165:5173",
+        "http://100.78.68.88:5173"
     ]
 
-    ARDUINO_PORT = "COM5"
-    # ARDUINO_PORT = "/dev/ttyACM0"
+    # ARDUINO_PORT = "COM5"
+    ARDUINO_PORT = "/dev/ttyACM0"
 
     BACKROUND_LOOP_SLEEP_IN_SECONDS = 0.2
     PID_SAMPLE_TIME_IN_SECONDS = 0.1
 
-    DATABASE_CONNECTION_STRING = "postgresql://app_user:app_password@localhost:5433/app_db"
-    # DATABASE_CONNECTION_STRING = "postgresql://app_user:app_password@db:5432/app_db"
+    # DATABASE_CONNECTION_STRING = "postgresql://app_user:app_password@localhost:5433/app_db"
+    DATABASE_CONNECTION_STRING = "postgresql://app_user:app_password@db:5432/app_db"
     
